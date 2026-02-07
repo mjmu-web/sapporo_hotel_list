@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管理（札幌ホテルリスト）</title>
+<style>
+  body{font-family:Meiryo,'メイリオ',sans-serif;background:linear-gradient(145deg,#c0c0c0,#e0e0e0);margin:0;padding:14px;color:#222}
+  .section-title{font-size:20px;margin:10px 0 6px;text-align:center;font-weight:bold}
+  .panel{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:10px auto;max-width:1100px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row input[type="text"], .row textarea{flex:1;padding:8px;border:1px solid #bbb;border-radius:6px;font-size:16px}
+  .row label{min-width:72px}
+  .btn{padding:10px 14px;border-radius:10px;border:2px solid #777;background:linear-gradient(#fff,#ccc);font-weight:700;cursor:pointer}
+  .btn-danger{border-color:#b44;background:linear-gradient(#fff,#f3c0c0)}
+  .btn-primary{border-color:#357;background:linear-gradient(#fff,#cfe0ff)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .grid-kana{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+  .grid-alpha{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+  .btn-k{padding:8px 0;border-radius:9999px;border:1px solid #999;background:linear-gradient(#fff,#ddd);font-weight:700;cursor:pointer}
+  .btn-a{padding:8px 0;border-radius:9999px;border:1px solid #999;background:linear-gradient(#fff,#ddd);font-weight:700;cursor:pointer}
+  .card{background:#fafafa;border:1px solid #ddd;border-radius:10px;padding:10px;margin-top:8px}
+  .hint{font-size:12px;color:#555}
+  .separator{height:1px;background:linear-gradient(90deg,transparent,#ccc,transparent);margin:10px 0}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .mini{padding:8px 10px}
+  .right{display:flex;justify-content:flex-end}
+  .nowrap{white-space:nowrap}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+  /* 印刷 */
+  @page{size:A4 landscape;margin:15mm}
+  @media print{
+    body{background:#fff;color:#000;-webkit-print-color-adjust:exact;width:297mm;height:210mm;transform:scale(0.92);transform-origin:top left}
+    .no-print{display:none !important}
+    #printArea{display:block !important}
+    table.print{width:100%;border-collapse:collapse}
+    table.print th,table.print td{border:1px solid #000;padding:4px 6px;vertical-align:top}
+    .print-title{font-size:18pt;font-weight:700;text-align:center;margin-bottom:6px}
+    .print-news{margin:2px 0 4px 0}
+    .page-break{page-break-after:always}
+  }
+  #printArea{display:none}
+</style>
+</head>
+<body>
+  <div class="panel no-print">
+    <h2 class="section-title">新着情報</h2>
+    <div class="row">
+      <label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）">
+    </div>
+    <div class="row">
+      <label>2</label><input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）">
+    </div>
+    <div class="row">
+      <label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）">
+    </div>
+    <div class="right">
+      <button class="btn btn-primary" onclick="applyNews()">保存してトップへ</button>
+    </div>
+    <div class="hint">※ 保存すると <span class="mono">index.html?news1=…&news2=…&news3=…</span> に反映されます。</div>
+  </div>
+
+  <div class="panel no-print">
+    <h2 class="section-title">ホテル登録・編集</h2>
+
+    <div class="grid-kana">
+      <button class="btn-k" data-g="あ">あ</button><button class="btn-k" data-g="か">か</button>
+      <button class="btn-k" data-g="さ">さ</button><button class="btn-k" data-g="た">た</button>
+      <button class="btn-k" data-g="な">な</button><button class="btn-k" data-g="は">は</button>
+      <button class="btn-k" data-g="ま">ま</button><button class="btn-k" data-g="や">や</button>
+      <button class="btn-k" data-g="ら">ら</button><button class="btn-k" data-g="わ">わ</button>
+    </div>
+    <div class="grid-alpha">
+      <button class="btn-a" data-g="ABCDE">ABCDE</button>
+      <button class="btn-a" data-g="FGHIJ">FGHIJ</button>
+      <button class="btn-a" data-g="KLMNO">KLMNO</button>
+      <button class="btn-a" data-g="PQRST">PQRST</button>
+      <button class="btn-a" data-g="UVWX">UVWX</button>
+      <button class="btn-a" data-g="YZ">YZ</button>
+    </div>
+
+    <div id="card" class="card">
+      <div class="row">
+        <label>頭文字</label>
+        <input id="fInitial" type="text" placeholder="あ / A">
+        <label>ホテル名</label>
+        <input id="fName" type="text" placeholder="ホテル◯◯（『ホテル』は検索時に無視）">
+      </div>
+      <div class="row">
+        <label>住所</label>
+        <input id="fAddress" type="text" placeholder="札幌市◯◯区…">
+      </div>
+      <div class="row">
+        <label>備考</label>
+        <textarea id="fNote" rows="3" placeholder="例：南2条通北側、駅近、旧名称あり など"></textarea>
+      </div>
+      <div class="row">
+        <label>キーワード</label>
+        <input id="fKeywords" type="text" placeholder="自動生成されます（スペース区切り）">
+        <button type="button" class="btn mini" onclick="generateKeywords()">🔧 キーワード生成</button>
+      </div>
+
+      <div class="separator"></div>
+      <div class="controls">
+        <button class="btn mini" id="btnPrev">◀ 前へ</button>
+        <span class="nowrap">（<span id="pos">0</span>/<span id="len">0</span>）</span>
+        <button class="btn mini" id="btnNext">▶ 次へ</button>
+
+        <input id="jumpHead" class="mono" type="text" placeholder="ホテル名で検索" style="min-width:180px">
+        <button class="btn mini" id="btnSearch">🔍 検索</button>
+
+        <button class="btn mini" id="btnAdd">➕ 追加（この後ろ）</button>
+        <button class="btn mini btn-primary" id="btnSave">💾 保存（全件反映）</button>
+        <button class="btn mini btn-danger" id="btnDelete">🗑 削除</button>
+      </div>
+
+      <div class="hint">※ 送りボタンだけでなく、上の五十音／英字ボタンで対象グループに絞ってから編集できます。</div>
+    </div>
+  </div>
+
+  <div class="panel no-print">
+    <h2 class="section-title">管理ツール</h2>
+    <div class="controls">
+      <button class="btn" onclick="printAll()">🖨️ プリントアウト</button>
+      <label class="btn" for="csvFile">📤 CSVインポート</label><input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
+      <button class="btn" onclick="downloadExcel()">📥 Excel形式でダウンロード</button>
+      <a class="btn" href="index.html">🏠 トップへ戻る</a>
+    </div>
+    <div class="hint">※ CSVインポート後は自動で全件置換 → GitHub Actions保存を行います（設定未完了ならCSVをダウンロード保存）。</div>
+  </div>
+
+  <!-- 印刷用エリア -->
+  <div id="printArea"></div>
+
+<script>
+/* ====== 設定：GitHub Actions 連携（必要なら値を入れて有効化） ====== */
+const GH_OWNER = "";           // 例: "your-account"
+const GH_REPO  = "";           // 例: "sapporo-hotel-list"
+const GH_TOKEN = "";           // Fine-grained PAT（repo:contents権限）。空のままならローカル保存にフォールバック
+const CSV_PATH = "data/hotels.csv";
+
+/* ====== 状態 ====== */
+let DATA_ALL = [];     // 全件
+let VIEW = [];         // 現在の絞り込みビュー
+let viewIndex = 0;     // ビュー内の位置（0-based）
+let currentGroup = null; // 現在押されているグループ
+
+/* ====== ルール（検索・絞込）===== */
+const KANA_RANGES = {
+  'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
+  'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
+  'さ': /[さしすせそサシスセソ]/,
+  'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/,
+  'な': /[なにぬねのナニヌネノ]/,
+  'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
+  'ま': /[まみむめもマミムメモ]/,
+  'や': /[やゆよゃゅょヤユヨ]/,
+  'ら': /[らりるれろラリルレロ]/,
+  'わ': /[わをんワヲン]/
+};
+const ALPHA_GROUPS = {
+  'ABCDE': 'ABCDE',
+  'FGHIJ': 'FGHIJ',
+  'KLMNO': 'KLMNO',
+  'PQRST': 'PQRST',
+  'UVWX': 'UVWX',
+  'YZ': 'YZ'
+};
+
+/* ====== 起動 ====== */
+init();
+async function init(){
+  await loadCSV();
+  bindUI();
+  applyGroup('あ');
+}
+
+/* ====== CSV 読込 ====== */
+async function loadCSV(){
+  try{
+    const r = await fetch(CSV_PATH, {cache:'no-store'});
+    const t = await r.text();
+    DATA_ALL = t.trim().split(/\r?\n/).filter(Boolean).map(l=>{
+      const p = l.split(','); // initial,name,address,note,keywords
+      return { 
+        initial:(p[0]||''), 
+        name:(p[1]||''), 
+        address:(p[2]||''), 
+        note:(p[3]||''),
+        keywords:(p[4]||'')
+      };
+    });
+  }catch(e){
+    alert('CSVの読み込みに失敗しました。');
+    DATA_ALL = [];
+  }
+}
+
+/* ====== UI バインド ====== */
+function bindUI(){
+  window.applyNews = function(){
+    const n1 = encodeURIComponent(document.getElementById('n1').value||'');
+    const n2 = encodeURIComponent(document.getElementById('n2').value||'');
+    const n3 = encodeURIComponent(document.getElementById('n3').value||'');
+    location.href = `index.html?news1=${n1}&news2=${n2}&news3=${n3}`;
+  };
+
+  document.querySelectorAll('[data-g]').forEach(b=>{
+    b.addEventListener('click', ()=>applyGroup(b.getAttribute('data-g')));
+  });
+
+  document.getElementById('btnPrev').addEventListener('click', ()=>move(-1));
+  document.getElementById('btnNext').addEventListener('click', ()=>move(1));
+  document.getElementById('btnAdd').addEventListener('click', addAfter);
+  document.getElementById('btnSave').addEventListener('click', saveAll);
+  document.getElementById('btnDelete').addEventListener('click', delCurrent);
+  document.getElementById('btnSearch').addEventListener('click', searchByName);
+
+  document.getElementById('csvFile').addEventListener('change', onImportCSV);
+  
+  document.getElementById('fName').addEventListener('blur', generateKeywords);
+}
+
+/* ====== キーワード自動生成 ====== */
+function generateKeywords() {
+  const name = document.getElementById('fName').value;
+  const address = document.getElementById('fAddress').value;
+  
+  if (!name) return;
+  
+  let keywords = name
+    .replace(/ホテル/g, ' ')
+    .replace(/〈/g, ' ')
+    .replace(/〉/g, ' ')
+    .replace(/by/g, ' ')
+    .replace(/[()（）・・・\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word && word.length > 1)
+    .join(' ');
+  
+  const addressKeywords = (address.match(/[ぁ-んァ-ン一-龠]+?[市区町村]/g) || [])
+    .filter(addr => addr.length > 2);
+  keywords += ' ' + addressKeywords.join(' ');
+  
+  const existingKeywords = (document.getElementById('fKeywords').value || '').split(' ').filter(k => k);
+  const newKeywords = keywords.split(' ').filter(k => k);
+  const allKeywords = [...new Set([...existingKeywords, ...newKeywords])].join(' ');
+  
+  document.getElementById('fKeywords').value = allKeywords.trim();
+}
+
+/* ====== グループ適用（五十音／英字） ====== */
+function applyGroup(g){
+  currentGroup = g;
+  if (KANA_RANGES[g]){
+    VIEW = DATA_ALL.filter(h=>{
+      const head = (h.name||'').replace(/^ホテル\s*/,'').trim().charAt(0);
+      return KANA_RANGES[g].test(head);
+    });
+    VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
+  }else{
+    const set = (ALPHA_GROUPS[g]||'');
+    VIEW = DATA_ALL.filter(h=>{
+      const head = ((h.name||'').replace(/^ホテル\s*/,'').trim().charAt(0) || '').toUpperCase();
+      return set.includes(head);
+    });
+    VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
+  }
+  viewIndex = 0;
+  updateForm();
+}
+
+/* ====== フォーム更新 ====== */
+function updateForm(){
+  const h = VIEW[viewIndex] || {};
+  document.getElementById('fInitial').value = h.initial || '';
+  document.getElementById('fName').value = h.name || '';
+  document.getElementById('fAddress').value = h.address || '';
+  document.getElementById('fNote').value = h.note || '';
+  document.getElementById('fKeywords').value = h.keywords || '';
+  
+  document.getElementById('pos').textContent = (VIEW.length > 0 ? viewIndex + 1 : 0);
+  document.getElementById('len').textContent = VIEW.length;
+  
+  document.getElementById('btnPrev').disabled = (viewIndex <= 0);
+  document.getElementById('btnNext').disabled = (viewIndex >= VIEW.length - 1);
+  document.getElementById('btnDelete').disabled = (VIEW.length === 0);
+}
+
+/* ====== 移動 ====== */
+function move(delta){
+  viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta));
+  updateForm();
+}
+
+/* ====== 検索 ====== */
+function searchByName(){
+  const query = document.getElementById('jumpHead').value.toLowerCase().trim();
+  if(!query) return;
+  
+  for(let i = 0; i < VIEW.length; i++){
+    if((VIEW[i].name || '').toLowerCase().includes(query)){
+      viewIndex = i;
+      updateForm();
+      return;
+    }
+  }
+  alert('該当するホテルが見つかりませんでした');
+}
+
+/* ====== 追加 ====== */
+function addAfter(){
+  const newHotel = {
+    initial: document.getElementById('fInitial').value,
+    name: document.getElementById('fName').value,
+    address: document.getElementById('fAddress').value,
+    note: document.getElementById('fNote').value,
+    keywords: document.getElementById('fKeywords').value
+  };
+  
+  if(!newHotel.name.trim()){
+    alert('ホテル名は必須です');
+    return;
+  }
+  
+  // 現在の位置の後ろに追加
+  const insertIndex = DATA_ALL.findIndex(h => h === VIEW[viewIndex]) + 1;
+  DATA_ALL.splice(insertIndex, 0, newHotel);
+  
+  // ビューを再構築
+  applyGroup(currentGroup);
+  viewIndex = VIEW.findIndex(h => h.name === newHotel.name);
+  updateForm();
+  alert('追加しました');
+}
+
+/* ====== 保存 ====== */
+async function saveAll(){
+  const csvContent = DATA_ALL.map(h => 
+    [h.initial, h.name, h.address, h.note, h.keywords].map(field => 
+      field || ''
+    ).join(',')
+  ).join('\n');
+  
+  try {
+    if(GH_OWNER && GH_REPO && GH_TOKEN){
+      await saveToGitHub(csvContent);
+    }else{
+      downloadCSV(csvContent, 'hotels.csv');
+      alert('GitHub設定がないためローカルに保存しました');
+    }
+  }catch(e){
+    downloadCSV(csvContent, 'hotels.csv');
+    alert('GitHub保存に失敗したためローカルに保存しました: ' + e.message);
+  }
+}
+
+/* ====== GitHub保存 ====== */
+async function saveToGitHub(content){
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${CSV_PATH}`;
+  
+  // 現在のファイル情報を取得
+  const currentFile = await fetch(apiUrl, {
+    headers: { 'Authorization': `token ${GH_TOKEN}` }
+  }).then(r => r.json());
+  
+  const response = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GH_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: 'Update hotels data',
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha: currentFile.sha
+    })
+  });
+  
+  if(response.ok){
+    alert('GitHubに保存しました');
+  }else{
+    throw new Error('GitHub API error');
+  }
+}
+
+/* ====== CSVダウンロード ====== */
+function downloadCSV(content, filename){
+  const blob = new Blob([content], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/* ====== 削除 ====== */
+function delCurrent(){
+  if(!confirm('本当に削除しますか？')) return;
+  
+  const hotelToDelete = VIEW[viewIndex];
+  DATA_ALL = DATA_ALL.filter(h => h !== hotelToDelete);
+  
+  applyGroup(currentGroup);
+  if(viewIndex >= VIEW.length) viewIndex = Math.max(0, VIEW.length - 1);
+  updateForm();
+  alert('削除しました');
+}
+
+/* ====== CSVインポート ====== */
+function onImportCSV(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const content = e.target.result;
+    const lines = content.split(/\r?\n/).filter(Boolean);
+    
+    DATA_ALL = lines.map(line => {
+      const parts = line.split(',');
+      return {
+        initial: parts[0] || '',
+        name: parts[1] || '',
+        address: parts[2] || '',
+        note: parts[3] || '',
+        keywords: parts[4] || ''
+      };
+    });
+    
+    alert(`CSVをインポートしました（${DATA_ALL.length}件）`);
+    applyGroup(currentGroup);
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+/* ====== Excelダウンロード ====== */
+function downloadExcel(){
+  const csvContent = DATA_ALL.map(h => 
+    [h.initial, h.name, h.address, h.note, h.keywords].join(',')
+  ).join('\n');
+  
+  downloadCSV(csvContent, 'hotels_export.csv');
+}
+
+/* ====== 印刷 ====== */
+function printAll(){
+  const printArea = document.getElementById('printArea');
+  let html = `
+    <div class="print-title">札幌ホテルリスト</div>
+    <table class="print">
+      <thead>
+        <tr>
+          <th>頭文字</th><th>ホテル名</th><th>住所</th><th>備考</th><th>キーワード</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  DATA_ALL.forEach(h => {
+    html += `
+      <tr>
+        <td>${h.initial}</td>
+        <td>${h.name}</td>
+        <td>${h.address}</td>
+        <td>${h.note}</td>
+        <td>${h.keywords}</td>
+      </tr>
+    `;
+  });
+  
+  html += '</tbody></table>';
+  printArea.innerHTML = html;
+  window.print();
+}
+</script>
+</body>
+</html>
