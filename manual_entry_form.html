@@ -165,9 +165,9 @@
   <div id="printArea"></div>
 
 <script>
-/* ====== 設定：あなたのリポジトリ情報（公開済みサイト用）====== */
-const GH_OWNER = "mjmu-web";              // ← あなたのユーザー名
-const GH_REPO  = "sapporo_hotel_list";    // ← リポジトリ名
+/* ====== 設定：あなたのリポジトリ情報 ====== */
+const GH_OWNER = "mjmu-web";              // あなたのユーザー名
+const GH_REPO  = "sapporo_hotel_list";    // リポジトリ名
 const CSV_PATH = "data/hotels.csv";
 const NEWS_PATH = "data/news.json";
 
@@ -222,13 +222,23 @@ function loadNewsFromURL() {
   document.getElementById('n3').value = params.get('news3') || '';
 }
 
-/* ====== CSV読込（4列） ====== */
+/* ====== CSV読込（4列）- ヘッダー行を自動検出して除去 ====== */
 async function loadCSV(){
   try{
     const r = await fetch(CSV_PATH, {cache:'no-store'});
     const t = await r.text();
     const lines = t.trim().split(/\r?\n/).filter(Boolean);
-    const dataLines = lines.slice(1); // ヘッダー除去
+    
+    // ヘッダー行の自動検出（1行目が「頭文字,ホテル名,住所,備考」に近いか確認）
+    let startLine = 0;
+    const firstLine = lines[0] || '';
+    if (firstLine.includes('頭文字') || firstLine.includes('initial') || 
+        firstLine.match(/[あ-んア-ンa-zA-Z]/) === null) {
+      // 1行目がヘッダーっぽい場合はスキップ
+      startLine = 1;
+    }
+    
+    const dataLines = lines.slice(startLine);
     
     DATA_ALL = dataLines.map(l => {
       const p = l.split(',');
@@ -307,7 +317,6 @@ function applyGroup(g){
     });
   }
   // VIEWはDATA_ALLの部分集合なので、ソート済みのDATA_ALLの順序を反映
-  // 必要ならVIEW内で再度ソート（念のため）
   VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
   viewIndex = 0;
   updateForm();
@@ -350,7 +359,7 @@ function searchByName(){
 /* ====== 保存（編集内容を反映） ====== */
 function saveCurrentEdit() {
   if (VIEW.length === 0) return;
-  const currentHotel = VIEW[viewIndex]; // 編集対象のオブジェクト
+  const currentHotel = VIEW[viewIndex];
 
   // フォームの値で更新
   currentHotel.initial = document.getElementById('fInitial').value.trim();
@@ -363,10 +372,8 @@ function saveCurrentEdit() {
     return;
   }
 
-  // 全体を並べ替え、現在のグループでVIEWを再構築
   refreshAfterDataChange();
 
-  // 更新後のVIEW内で同じホテルを探す
   const newIndex = VIEW.findIndex(h => h === currentHotel);
   viewIndex = newIndex !== -1 ? newIndex : 0;
   updateForm();
@@ -385,16 +392,14 @@ function addNewHotel(){
     alert('ホテル名は必須');
     return;
   }
-  DATA_ALL.push(newHotel);          // 一旦末尾に追加
-  refreshAfterDataChange();          // 並べ替え＆VIEW再構築
+  DATA_ALL.push(newHotel);
+  refreshAfterDataChange();
 
-  // 入力欄クリア
   document.getElementById('newInitial').value = '';
   document.getElementById('newName').value = '';
   document.getElementById('newAddress').value = '';
   document.getElementById('newNote').value = '';
 
-  // 追加したホテルにフォーカス（VIEW内で探す）
   viewIndex = VIEW.findIndex(h => h.name === newHotel.name && h.address === newHotel.address);
   if (viewIndex === -1) viewIndex = 0;
   updateForm();
@@ -457,9 +462,8 @@ function downloadExcel(){
 
 /* ====== 印刷 ====== */
 function printAll() {
-  sortDataAll(); // 印刷直前にも整列
+  sortDataAll();
   
-  // 新着情報の取得
   const news1 = document.getElementById('n1').value || '';
   const news2 = document.getElementById('n2').value || '';
   const news3 = document.getElementById('n3').value || '';
@@ -468,7 +472,6 @@ function printAll() {
   
   const printArea = document.getElementById('printArea');
   
-  // テーブルのヘッダー行
   const tableHeader = `
     <thead>
       <tr>
@@ -480,10 +483,8 @@ function printAll() {
     </thead>
   `;
   
-  // 1ページ目は新着情報があるので38行、2ページ目以降は40行ずつ
-  const firstPageRows = 38; // 新着情報の高さに応じて調整可能
+  const firstPageRows = 38;
   
-  // 1ページ目
   let html = `
     <div class="print-title">札幌ホテルリスト</div>
     <div class="print-news">📢 ${newsText}</div>
@@ -492,7 +493,6 @@ function printAll() {
       <tbody>
   `;
   
-  // 1ページ目のデータ（最初のfirstPageRows行）
   const firstPageData = DATA_ALL.slice(0, firstPageRows);
   firstPageData.forEach(h => {
     html += `
@@ -507,7 +507,6 @@ function printAll() {
   
   html += `</tbody></table>`;
   
-  // 2ページ目以降（40行ずつ）
   const remainingData = DATA_ALL.slice(firstPageRows);
   for (let i = 0; i < remainingData.length; i += 40) {
     html += `<div class="page-break"></div>`;
@@ -532,8 +531,12 @@ function printAll() {
   window.print();
 }
 
-/* ====== すべてGitHubに保存（1ボタンでCSVと新着情報） ====== */
+/* ====== すべてGitHubに保存（デバッグ機能付き） ====== */
 async function saveAllToGitHub() {
+  // ★ 保存前のデータ件数を表示
+  console.log('【保存前】データ件数:', DATA_ALL.length);
+  console.log('【保存前】先頭3件:', DATA_ALL.slice(0, 3));
+  
   const token = document.getElementById('githubToken').value;
   if (!token) {
     alert('GitHubトークンを入力してください');
@@ -545,12 +548,19 @@ async function saveAllToGitHub() {
     return;
   }
   
+  // ★ 保存前に確認ダイアログ
+  if (!confirm(`現在${DATA_ALL.length}件のデータがあります。GitHubに保存しますか？`)) {
+    return;
+  }
+  
   try {
     // 1. CSVを保存
     sortDataAll();
     const csvContent = DATA_ALL.map(h => 
       [h.initial, h.name, h.address, h.note].join(',')
     ).join('\n');
+    
+    console.log('保存するCSV内容（先頭200文字）:', csvContent.substring(0, 200));
     
     await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel');
     
@@ -573,7 +583,7 @@ async function saveAllToGitHub() {
   }
 }
 
-/* ====== GitHubにファイルを保存（共通処理） ====== */
+/* ====== GitHubにファイルを保存（デバッグ機能付き） ====== */
 async function saveFileToGitHub(token, path, content, message) {
   const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
   
@@ -586,10 +596,13 @@ async function saveFileToGitHub(token, path, content, message) {
     if (getRes.ok) {
       const current = await getRes.json();
       sha = current.sha;
+      
+      // ★ デバッグ：現在のファイル内容を表示
+      const currentContent = decodeURIComponent(escape(atob(current.content)));
+      console.log(`【${path}】現在の内容（先頭100文字）:`, currentContent.substring(0, 100));
     }
-    // ファイルが存在しない場合は新規作成（shaなしでOK）
   } catch (e) {
-    // ファイルがない場合は無視
+    console.log('新規ファイル作成:', path);
   }
   
   // ファイルを更新/作成
@@ -611,6 +624,7 @@ async function saveFileToGitHub(token, path, content, message) {
     throw new Error(error.message || 'API error');
   }
   
+  console.log(`【${path}】保存成功`);
   return putRes.json();
 }
 </script>
