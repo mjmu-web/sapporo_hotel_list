@@ -14,6 +14,7 @@
   .btn{padding:10px 14px;border-radius:10px;border:2px solid #777;background:linear-gradient(#fff,#ccc);font-weight:700;cursor:pointer}
   .btn-danger{border-color:#b44;background:linear-gradient(#fff,#f3c0c0)}
   .btn-primary{border-color:#357;background:linear-gradient(#fff,#cfe0ff)}
+  .btn-success{border-color:#274;background:linear-gradient(#fff,#cfc)}
   .btn:disabled{opacity:.5;cursor:not-allowed}
   .grid-kana{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
   .grid-alpha{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
@@ -27,16 +28,22 @@
   .right{display:flex;justify-content:flex-end}
   .nowrap{white-space:nowrap}
   .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace}
+  .new-hotel-panel{background:#e8f0fe;border:2px solid #6c8ebf;border-radius:10px;padding:12px;margin-top:15px}
   /* 印刷 */
   @page{size:A4 landscape;margin:15mm}
   @media print{
-    body{background:#fff;color:#000;-webkit-print-color-adjust:exact;width:297mm;height:210mm;transform:scale(0.92);transform-origin:top left}
+    body{background:#fff;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;width:100%;margin:0;padding:0}
     .no-print{display:none !important}
     #printArea{display:block !important}
-    table.print{width:100%;border-collapse:collapse}
+    table.print{width:100%;border-collapse:collapse;font-size:10pt;page-break-inside:avoid}
     table.print th,table.print td{border:1px solid #000;padding:4px 6px;vertical-align:top}
-    .print-title{font-size:18pt;font-weight:700;text-align:center;margin-bottom:6px}
-    .print-news{margin:2px 0 4px 0}
+    table.print th{background-color:#f0f0f0;font-weight:bold}
+    .print-title{font-size:18pt;font-weight:700;text-align:center;margin:5mm 0 3mm 0}
+    .print-news{text-align:center;margin:0 0 5mm 0;padding:3mm;border:1px solid #ccc;background-color:#f9f9f9;font-size:11pt}
+    tr{page-break-inside:avoid}
+    thead{display:table-header-group}
+    tbody{display:table-row-group}
+    .print-header{display:block}
     .page-break{page-break-after:always}
   }
   #printArea{display:none}
@@ -55,13 +62,13 @@
       <label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）">
     </div>
     <div class="right">
-      <button class="btn btn-primary" onclick="applyNews()">保存してトップへ</button>
+      <button class="btn" onclick="applyNews()">プレビュー（URL生成）</button>
     </div>
     <div class="hint">※ 保存すると <span class="mono">index.html?news1=…&news2=…&news3=…</span> に反映されます。</div>
   </div>
 
   <div class="panel no-print">
-    <h2 class="section-title">ホテル登録・編集</h2>
+    <h2 class="section-title">ホテル編集（既存データ）</h2>
 
     <div class="grid-kana">
       <button class="btn-k" data-g="あ">あ</button><button class="btn-k" data-g="か">か</button>
@@ -84,7 +91,7 @@
         <label>頭文字</label>
         <input id="fInitial" type="text" placeholder="あ / A">
         <label>ホテル名</label>
-        <input id="fName" type="text" placeholder="ホテル◯◯（『ホテル』は検索時に無視）">
+        <input id="fName" type="text" placeholder="ホテル◯◯">
       </div>
       <div class="row">
         <label>住所</label>
@@ -93,11 +100,6 @@
       <div class="row">
         <label>備考</label>
         <textarea id="fNote" rows="3" placeholder="例：南2条通北側、駅近、旧名称あり など"></textarea>
-      </div>
-      <div class="row">
-        <label>キーワード</label>
-        <input id="fKeywords" type="text" placeholder="自動生成されます（スペース区切り）">
-        <button type="button" class="btn mini" onclick="generateKeywords()">🔧 キーワード生成</button>
       </div>
 
       <div class="separator"></div>
@@ -109,13 +111,36 @@
         <input id="jumpHead" class="mono" type="text" placeholder="ホテル名で検索" style="min-width:180px">
         <button class="btn mini" id="btnSearch">🔍 検索</button>
 
-        <button class="btn mini" id="btnAdd">➕ 追加（この後ろ）</button>
-        <button class="btn mini btn-primary" id="btnSave">💾 保存（全件反映）</button>
+        <!-- 保存ボタン追加 -->
+        <button class="btn mini btn-primary" id="btnSave">💾 保存</button>
         <button class="btn mini btn-danger" id="btnDelete">🗑 削除</button>
       </div>
 
-      <div class="hint">※ 送りボタンだけでなく、上の五十音／英字ボタンで対象グループに絞ってから編集できます。</div>
+      <div class="hint">※ 五十音／英字ボタンでグループを絞れます。編集後は「保存」ボタンで更新、CSVエクスポートも併用ください。</div>
     </div>
+  </div>
+
+  <!-- 新規ホテル登録セクション -->
+  <div class="panel no-print new-hotel-panel">
+    <h2 class="section-title">📝 新規ホテル登録（名前順に自動挿入）</h2>
+    <div class="row">
+      <label>頭文字</label>
+      <input id="newInitial" type="text" placeholder="あ / A">
+      <label>ホテル名</label>
+      <input id="newName" type="text" placeholder="ホテル名（必須）">
+    </div>
+    <div class="row">
+      <label>住所</label>
+      <input id="newAddress" type="text" placeholder="札幌市…">
+    </div>
+    <div class="row">
+      <label>備考</label>
+      <textarea id="newNote" rows="2" placeholder="備考"></textarea>
+    </div>
+    <div class="controls">
+      <button class="btn btn-success" id="btnNewAdd">✨ 新規追加（自動整列）</button>
+    </div>
+    <div class="hint">入力後「新規追加」で、ホテル名の五十音順に自動的に挿入されます。</div>
   </div>
 
   <div class="panel no-print">
@@ -123,29 +148,36 @@
     <div class="controls">
       <button class="btn" onclick="printAll()">🖨️ プリントアウト</button>
       <label class="btn" for="csvFile">📤 CSVインポート</label><input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
-      <button class="btn" onclick="downloadExcel()">📥 Excel形式でダウンロード</button>
+      <button class="btn" onclick="downloadExcel()">📥 CSVでダウンロード</button>
+      
+      <!-- ★ トークン入力欄と保存ボタン -->
+      <div style="display:flex; gap:8px; margin-left:10px; align-items:center;">
+        <input type="password" id="githubToken" placeholder="GitHubトークン（変更時のみ）" style="padding:8px; border-radius:6px; border:1px solid #bbb; width:250px;">
+        <button class="btn btn-primary" onclick="saveAllToGitHub()">🚀 すべてGitHubに保存</button>
+      </div>
+      
       <a class="btn" href="index.html">🏠 トップへ戻る</a>
     </div>
-    <div class="hint">※ CSVインポート後は自動で全件置換 → GitHub Actions保存を行います（設定未完了ならCSVをダウンロード保存）。</div>
+    <div class="hint">※ CSVインポート後は自動で全件置換 → 名前順に整列されます。GitHub保存でCSVと新着情報が同時更新されます。</div>
   </div>
 
   <!-- 印刷用エリア -->
   <div id="printArea"></div>
 
 <script>
-/* ====== 設定：GitHub Actions 連携（必要なら値を入れて有効化） ====== */
-const GH_OWNER = "";           // 例: "your-account"
-const GH_REPO  = "";           // 例: "sapporo-hotel-list"
-const GH_TOKEN = "";           // Fine-grained PAT（repo:contents権限）。空のままならローカル保存にフォールバック
+/* ====== 設定：あなたのリポジトリ情報（公開済みサイト用）====== */
+const GH_OWNER = "mjmu-web";              // ← あなたのユーザー名
+const GH_REPO  = "sapporo_hotel_list";    // ← リポジトリ名
 const CSV_PATH = "data/hotels.csv";
+const NEWS_PATH = "data/news.json";
 
 /* ====== 状態 ====== */
-let DATA_ALL = [];     // 全件
+let DATA_ALL = [];     // 全件（常に名前順に維持）
 let VIEW = [];         // 現在の絞り込みビュー
 let viewIndex = 0;     // ビュー内の位置（0-based）
 let currentGroup = null; // 現在押されているグループ
 
-/* ====== ルール（検索・絞込）===== */
+/* ====== ルール ====== */
 const KANA_RANGES = {
   'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
   'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
@@ -171,32 +203,71 @@ const ALPHA_GROUPS = {
 init();
 async function init(){
   await loadCSV();
+  sortDataAll();               // 読み込み後すぐ整列
   bindUI();
-  applyGroup('あ');
+  VIEW = DATA_ALL.slice();     // 初期表示は全件
+  currentGroup = null;
+  viewIndex = 0;
+  updateForm();
+  
+  // 新着情報があれば表示
+  loadNewsFromURL();
 }
 
-/* ====== CSV 読込 ====== */
+/* ====== URLから新着情報を読み込み ====== */
+function loadNewsFromURL() {
+  const params = new URLSearchParams(location.search);
+  document.getElementById('n1').value = params.get('news1') || '';
+  document.getElementById('n2').value = params.get('news2') || '';
+  document.getElementById('n3').value = params.get('news3') || '';
+}
+
+/* ====== CSV読込（4列） ====== */
 async function loadCSV(){
   try{
     const r = await fetch(CSV_PATH, {cache:'no-store'});
     const t = await r.text();
-    DATA_ALL = t.trim().split(/\r?\n/).filter(Boolean).map(l=>{
-      const p = l.split(','); // initial,name,address,note,keywords
+    const lines = t.trim().split(/\r?\n/).filter(Boolean);
+    const dataLines = lines.slice(1); // ヘッダー除去
+    
+    DATA_ALL = dataLines.map(l => {
+      const p = l.split(',');
       return { 
-        initial:(p[0]||''), 
-        name:(p[1]||''), 
-        address:(p[2]||''), 
-        note:(p[3]||''),
-        keywords:(p[4]||'')
+        initial: p[0] || '', 
+        name: p[1] || '', 
+        address: p[2] || '', 
+        note: p[3] || ''
       };
     });
-  }catch(e){
-    alert('CSVの読み込みに失敗しました。');
+    console.log('読み込み完了:', DATA_ALL.length, '件');
+  } catch(e){
+    alert('CSVの読み込みに失敗: ' + e.message);
     DATA_ALL = [];
   }
 }
 
-/* ====== UI バインド ====== */
+/* ====== 並べ替え（名前順） ====== */
+function sortDataAll(){
+  DATA_ALL.sort((a, b) => 
+    (a.name || '').localeCompare((b.name || ''), 'ja')
+  );
+}
+
+/* ====== データ変更後の共通処理 ====== */
+function refreshAfterDataChange(){
+  sortDataAll();               // 全体を整列
+  // 現在のグループでVIEWを再構築
+  if (currentGroup) {
+    applyGroup(currentGroup);
+  } else {
+    VIEW = DATA_ALL.slice();
+    viewIndex = Math.min(viewIndex, VIEW.length - 1);
+    if (viewIndex < 0) viewIndex = 0;
+    updateForm();
+  }
+}
+
+/* ====== UIバインド ====== */
 function bindUI(){
   window.applyNews = function(){
     const n1 = encodeURIComponent(document.getElementById('n1').value||'');
@@ -211,45 +282,16 @@ function bindUI(){
 
   document.getElementById('btnPrev').addEventListener('click', ()=>move(-1));
   document.getElementById('btnNext').addEventListener('click', ()=>move(1));
-  document.getElementById('btnAdd').addEventListener('click', addAfter);
-  document.getElementById('btnSave').addEventListener('click', saveAll);
+  
+  // 保存ボタンのイベント
+  document.getElementById('btnSave').addEventListener('click', saveCurrentEdit);
   document.getElementById('btnDelete').addEventListener('click', delCurrent);
   document.getElementById('btnSearch').addEventListener('click', searchByName);
-
   document.getElementById('csvFile').addEventListener('change', onImportCSV);
-  
-  document.getElementById('fName').addEventListener('blur', generateKeywords);
+  document.getElementById('btnNewAdd').addEventListener('click', addNewHotel);
 }
 
-/* ====== キーワード自動生成 ====== */
-function generateKeywords() {
-  const name = document.getElementById('fName').value;
-  const address = document.getElementById('fAddress').value;
-  
-  if (!name) return;
-  
-  let keywords = name
-    .replace(/ホテル/g, ' ')
-    .replace(/〈/g, ' ')
-    .replace(/〉/g, ' ')
-    .replace(/by/g, ' ')
-    .replace(/[()（）・・・\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word && word.length > 1)
-    .join(' ');
-  
-  const addressKeywords = (address.match(/[ぁ-んァ-ン一-龠]+?[市区町村]/g) || [])
-    .filter(addr => addr.length > 2);
-  keywords += ' ' + addressKeywords.join(' ');
-  
-  const existingKeywords = (document.getElementById('fKeywords').value || '').split(' ').filter(k => k);
-  const newKeywords = keywords.split(' ').filter(k => k);
-  const allKeywords = [...new Set([...existingKeywords, ...newKeywords])].join(' ');
-  
-  document.getElementById('fKeywords').value = allKeywords.trim();
-}
-
-/* ====== グループ適用（五十音／英字） ====== */
+/* ====== グループ適用 ====== */
 function applyGroup(g){
   currentGroup = g;
   if (KANA_RANGES[g]){
@@ -257,15 +299,16 @@ function applyGroup(g){
       const head = (h.name||'').replace(/^ホテル\s*/,'').trim().charAt(0);
       return KANA_RANGES[g].test(head);
     });
-    VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
   }else{
     const set = (ALPHA_GROUPS[g]||'');
     VIEW = DATA_ALL.filter(h=>{
       const head = ((h.name||'').replace(/^ホテル\s*/,'').trim().charAt(0) || '').toUpperCase();
       return set.includes(head);
     });
-    VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
   }
+  // VIEWはDATA_ALLの部分集合なので、ソート済みのDATA_ALLの順序を反映
+  // 必要ならVIEW内で再度ソート（念のため）
+  VIEW.sort((a,b)=> (a.name||'').localeCompare((b.name||''),'ja'));
   viewIndex = 0;
   updateForm();
 }
@@ -277,7 +320,6 @@ function updateForm(){
   document.getElementById('fName').value = h.name || '';
   document.getElementById('fAddress').value = h.address || '';
   document.getElementById('fNote').value = h.note || '';
-  document.getElementById('fKeywords').value = h.keywords || '';
   
   document.getElementById('pos').textContent = (VIEW.length > 0 ? viewIndex + 1 : 0);
   document.getElementById('len').textContent = VIEW.length;
@@ -287,17 +329,14 @@ function updateForm(){
   document.getElementById('btnDelete').disabled = (VIEW.length === 0);
 }
 
-/* ====== 移動 ====== */
 function move(delta){
   viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta));
   updateForm();
 }
 
-/* ====== 検索 ====== */
 function searchByName(){
   const query = document.getElementById('jumpHead').value.toLowerCase().trim();
   if(!query) return;
-  
   for(let i = 0; i < VIEW.length; i++){
     if((VIEW[i].name || '').toLowerCase().includes(query)){
       viewIndex = i;
@@ -305,83 +344,70 @@ function searchByName(){
       return;
     }
   }
-  alert('該当するホテルが見つかりませんでした');
+  alert('該当なし');
 }
 
-/* ====== 追加 ====== */
-function addAfter(){
-  const newHotel = {
-    initial: document.getElementById('fInitial').value,
-    name: document.getElementById('fName').value,
-    address: document.getElementById('fAddress').value,
-    note: document.getElementById('fNote').value,
-    keywords: document.getElementById('fKeywords').value
-  };
-  
-  if(!newHotel.name.trim()){
+/* ====== 保存（編集内容を反映） ====== */
+function saveCurrentEdit() {
+  if (VIEW.length === 0) return;
+  const currentHotel = VIEW[viewIndex]; // 編集対象のオブジェクト
+
+  // フォームの値で更新
+  currentHotel.initial = document.getElementById('fInitial').value.trim();
+  currentHotel.name = document.getElementById('fName').value.trim();
+  currentHotel.address = document.getElementById('fAddress').value.trim();
+  currentHotel.note = document.getElementById('fNote').value.trim();
+
+  if (!currentHotel.name) {
     alert('ホテル名は必須です');
     return;
   }
-  
-  // 現在の位置の後ろに追加
-  const insertIndex = DATA_ALL.findIndex(h => h === VIEW[viewIndex]) + 1;
-  DATA_ALL.splice(insertIndex, 0, newHotel);
-  
-  // ビューを再構築
-  applyGroup(currentGroup);
-  viewIndex = VIEW.findIndex(h => h.name === newHotel.name);
+
+  // 全体を並べ替え、現在のグループでVIEWを再構築
+  refreshAfterDataChange();
+
+  // 更新後のVIEW内で同じホテルを探す
+  const newIndex = VIEW.findIndex(h => h === currentHotel);
+  viewIndex = newIndex !== -1 ? newIndex : 0;
   updateForm();
-  alert('追加しました');
+  alert('保存しました');
 }
 
-/* ====== 保存 ====== */
-async function saveAll(){
-  const csvContent = DATA_ALL.map(h => 
-    [h.initial, h.name, h.address, h.note, h.keywords].map(field => 
-      field || ''
-    ).join(',')
-  ).join('\n');
-  
-  try {
-    if(GH_OWNER && GH_REPO && GH_TOKEN){
-      await saveToGitHub(csvContent);
-    }else{
-      downloadCSV(csvContent, 'hotels.csv');
-      alert('GitHub設定がないためローカルに保存しました');
-    }
-  }catch(e){
-    downloadCSV(csvContent, 'hotels.csv');
-    alert('GitHub保存に失敗したためローカルに保存しました: ' + e.message);
+/* ====== 新規追加（自動整列） ====== */
+function addNewHotel(){
+  const newHotel = {
+    initial: document.getElementById('newInitial').value.trim(),
+    name: document.getElementById('newName').value.trim(),
+    address: document.getElementById('newAddress').value.trim(),
+    note: document.getElementById('newNote').value.trim()
+  };
+  if(!newHotel.name){
+    alert('ホテル名は必須');
+    return;
   }
+  DATA_ALL.push(newHotel);          // 一旦末尾に追加
+  refreshAfterDataChange();          // 並べ替え＆VIEW再構築
+
+  // 入力欄クリア
+  document.getElementById('newInitial').value = '';
+  document.getElementById('newName').value = '';
+  document.getElementById('newAddress').value = '';
+  document.getElementById('newNote').value = '';
+
+  // 追加したホテルにフォーカス（VIEW内で探す）
+  viewIndex = VIEW.findIndex(h => h.name === newHotel.name && h.address === newHotel.address);
+  if (viewIndex === -1) viewIndex = 0;
+  updateForm();
+  alert('新規ホテルを正しい順序に追加しました');
 }
 
-/* ====== GitHub保存 ====== */
-async function saveToGitHub(content){
-  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${CSV_PATH}`;
-  
-  // 現在のファイル情報を取得
-  const currentFile = await fetch(apiUrl, {
-    headers: { 'Authorization': `token ${GH_TOKEN}` }
-  }).then(r => r.json());
-  
-  const response = await fetch(apiUrl, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${GH_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: 'Update hotels data',
-      content: btoa(unescape(encodeURIComponent(content))),
-      sha: currentFile.sha
-    })
-  });
-  
-  if(response.ok){
-    alert('GitHubに保存しました');
-  }else{
-    throw new Error('GitHub API error');
-  }
+/* ====== 削除 ====== */
+function delCurrent(){
+  if(!confirm('本当に削除しますか？')) return;
+  const hotelToDelete = VIEW[viewIndex];
+  DATA_ALL = DATA_ALL.filter(h => h !== hotelToDelete);
+  refreshAfterDataChange();
+  alert('削除しました');
 }
 
 /* ====== CSVダウンロード ====== */
@@ -397,85 +423,195 @@ function downloadCSV(content, filename){
   document.body.removeChild(link);
 }
 
-/* ====== 削除 ====== */
-function delCurrent(){
-  if(!confirm('本当に削除しますか？')) return;
-  
-  const hotelToDelete = VIEW[viewIndex];
-  DATA_ALL = DATA_ALL.filter(h => h !== hotelToDelete);
-  
-  applyGroup(currentGroup);
-  if(viewIndex >= VIEW.length) viewIndex = Math.max(0, VIEW.length - 1);
-  updateForm();
-  alert('削除しました');
-}
-
 /* ====== CSVインポート ====== */
 function onImportCSV(event){
   const file = event.target.files[0];
   if(!file) return;
-  
   const reader = new FileReader();
   reader.onload = function(e){
     const content = e.target.result;
     const lines = content.split(/\r?\n/).filter(Boolean);
-    
     DATA_ALL = lines.map(line => {
       const parts = line.split(',');
       return {
         initial: parts[0] || '',
         name: parts[1] || '',
         address: parts[2] || '',
-        note: parts[3] || '',
-        keywords: parts[4] || ''
+        note: parts[3] || ''
       };
     });
-    
-    alert(`CSVをインポートしました（${DATA_ALL.length}件）`);
-    applyGroup(currentGroup);
+    refreshAfterDataChange();
+    alert(`CSVをインポート（${DATA_ALL.length}件）・名前順に整列済み`);
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
-/* ====== Excelダウンロード ====== */
 function downloadExcel(){
+  sortDataAll();
   const csvContent = DATA_ALL.map(h => 
-    [h.initial, h.name, h.address, h.note, h.keywords].join(',')
+    [h.initial, h.name, h.address, h.note].join(',')
   ).join('\n');
-  
   downloadCSV(csvContent, 'hotels_export.csv');
 }
 
 /* ====== 印刷 ====== */
-function printAll(){
+function printAll() {
+  sortDataAll(); // 印刷直前にも整列
+  
+  // 新着情報の取得
+  const news1 = document.getElementById('n1').value || '';
+  const news2 = document.getElementById('n2').value || '';
+  const news3 = document.getElementById('n3').value || '';
+  const newsItems = [news1, news2, news3].filter(Boolean);
+  const newsText = newsItems.length > 0 ? newsItems.join(' ／ ') : '新着情報はありません';
+  
   const printArea = document.getElementById('printArea');
+  
+  // テーブルのヘッダー行
+  const tableHeader = `
+    <thead>
+      <tr>
+        <th>頭文字</th>
+        <th>ホテル名</th>
+        <th>住所</th>
+        <th>備考</th>
+      </tr>
+    </thead>
+  `;
+  
+  // 1ページ目は新着情報があるので38行、2ページ目以降は40行ずつ
+  const firstPageRows = 38; // 新着情報の高さに応じて調整可能
+  
+  // 1ページ目
   let html = `
     <div class="print-title">札幌ホテルリスト</div>
+    <div class="print-news">📢 ${newsText}</div>
     <table class="print">
-      <thead>
-        <tr>
-          <th>頭文字</th><th>ホテル名</th><th>住所</th><th>備考</th><th>キーワード</th>
-        </tr>
-      </thead>
+      ${tableHeader}
       <tbody>
   `;
   
-  DATA_ALL.forEach(h => {
+  // 1ページ目のデータ（最初のfirstPageRows行）
+  const firstPageData = DATA_ALL.slice(0, firstPageRows);
+  firstPageData.forEach(h => {
     html += `
       <tr>
-        <td>${h.initial}</td>
-        <td>${h.name}</td>
-        <td>${h.address}</td>
-        <td>${h.note}</td>
-        <td>${h.keywords}</td>
+        <td>${h.initial || ''}</td>
+        <td>${h.name || ''}</td>
+        <td>${h.address || ''}</td>
+        <td>${h.note || ''}</td>
       </tr>
     `;
   });
   
-  html += '</tbody></table>';
+  html += `</tbody></table>`;
+  
+  // 2ページ目以降（40行ずつ）
+  const remainingData = DATA_ALL.slice(firstPageRows);
+  for (let i = 0; i < remainingData.length; i += 40) {
+    html += `<div class="page-break"></div>`;
+    html += `<table class="print">${tableHeader}<tbody>`;
+    
+    const pageData = remainingData.slice(i, i + 40);
+    pageData.forEach(h => {
+      html += `
+        <tr>
+          <td>${h.initial || ''}</td>
+          <td>${h.name || ''}</td>
+          <td>${h.address || ''}</td>
+          <td>${h.note || ''}</td>
+        </tr>
+      `;
+    });
+    
+    html += `</tbody></table>`;
+  }
+  
   printArea.innerHTML = html;
   window.print();
+}
+
+/* ====== すべてGitHubに保存（1ボタンでCSVと新着情報） ====== */
+async function saveAllToGitHub() {
+  const token = document.getElementById('githubToken').value;
+  if (!token) {
+    alert('GitHubトークンを入力してください');
+    return;
+  }
+  
+  if (!GH_OWNER || !GH_REPO) {
+    alert('GitHubの設定（OWNER, REPO）が未入力です');
+    return;
+  }
+  
+  try {
+    // 1. CSVを保存
+    sortDataAll();
+    const csvContent = DATA_ALL.map(h => 
+      [h.initial, h.name, h.address, h.note].join(',')
+    ).join('\n');
+    
+    await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel');
+    
+    // 2. 新着情報を保存
+    const newsData = {
+      news1: document.getElementById('n1').value || '',
+      news2: document.getElementById('n2').value || '',
+      news3: document.getElementById('n3').value || '',
+      updated: new Date().toISOString()
+    };
+    const newsContent = JSON.stringify(newsData, null, 2);
+    
+    await saveFileToGitHub(token, NEWS_PATH, newsContent, 'Update news.json from admin panel');
+    
+    alert('✅ CSVと新着情報をGitHubに保存しました\n数分後に反映されます');
+    
+  } catch (e) {
+    alert('❌ 保存に失敗しました: ' + e.message);
+    console.error(e);
+  }
+}
+
+/* ====== GitHubにファイルを保存（共通処理） ====== */
+async function saveFileToGitHub(token, path, content, message) {
+  const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  
+  // 現在のファイル情報を取得（shaが必要）
+  let sha = null;
+  try {
+    const getRes = await fetch(apiUrl, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (getRes.ok) {
+      const current = await getRes.json();
+      sha = current.sha;
+    }
+    // ファイルが存在しない場合は新規作成（shaなしでOK）
+  } catch (e) {
+    // ファイルがない場合は無視
+  }
+  
+  // ファイルを更新/作成
+  const putRes = await fetch(apiUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: message,
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha: sha
+    })
+  });
+  
+  if (!putRes.ok) {
+    const error = await putRes.json();
+    throw new Error(error.message || 'API error');
+  }
+  
+  return putRes.json();
 }
 </script>
 </body>
