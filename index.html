@@ -11,9 +11,17 @@ body{
   font-family:Meiryo,'メイリオ',sans-serif;
   background:linear-gradient(145deg,#c0c0c0,#e0e0e0);
   margin:0;
-  padding:16px;
+  /* 下部に70pxの余白（固定ボタン対策） */
+  padding:16px 16px 70px 16px;
 }
-
+#loadStatus {
+  font-size:0.8em;
+  color:#333;
+  background:#ffc;
+  padding:2px 8px;
+  border-radius:12px;
+  display:inline-block;
+}
 /* ===== NHKニュース（最上部） ===== */
 #newsBoard {
   background:#000;
@@ -38,8 +46,6 @@ body{
   100% { transform: translateX(-100%); }
 }
 #newsBoard:hover #newsContent { animation-play-state: paused; }
-
-/* ===== 更新日時 ===== */
 #updateTime {
   text-align:right;
   font-size:0.8em;
@@ -47,23 +53,7 @@ body{
   opacity:0.7;
   margin:-5px 8px 10px 0;
 }
-
 h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
-
-/* 元の.metalは不使用 */
-.metal{
-  width:40px;height:40px;
-  border-radius:50%;
-  border:2px solid #999;
-  background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);
-  box-shadow:0 3px 6px rgba(0,0,0,.3),
-              inset 0 2px 3px rgba(255,255,255,.7),
-              inset 0 -3px 4px rgba(0,0,0,.3);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;margin:0 5px;
-}
-
-/* ===== 新しいナビゲーションボタンの追加 (.metal-round-lg) ===== */
 .metal-round-lg{
   width:60px;height:60px;
   border-radius:50%;
@@ -74,10 +64,9 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
               inset 0 -3px 4px rgba(0,0,0,.3);
   display:flex;align-items:center;justify-content:center;
   font-weight:bold;
-  font-size: 1.5em; /* アイコンを大きく */
+  font-size: 1.5em;
   cursor: pointer;
 }
-
 #topBtns{
   display:flex;
   justify-content:center;
@@ -95,22 +84,20 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
 .btns{display:grid;grid-template-columns:repeat(5,60px);
   gap:14px;justify-content:center;margin:10px auto;}
-
-/* ===== 五十音ボタンの修正 (.metal-round) ===== */
 .metal-round{width:60px;height:60px;border-radius:50%;border:2px solid #999;
   background:linear-gradient(#fff,#d0d0d0 40%,#b0b0d0 60%,#e0e0e0);
   box-shadow:0 3px 6px rgba(0,0,0,.3),
               inset 0 2px 3px rgba(255,255,255,.7),
               inset 0 -3px 4px rgba(0,0,0,.3);
-  font-weight:900; /* 修正: 太字を強化 */
-  font-size: 1.5em; /* 修正: サイズを大きく */
+  font-weight:900;
+  font-size: 1.5em;
 }
 .alpha{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
   max-width:520px;margin:6px auto 12px;}
 .long{padding:10px 20px;border-radius:9999px;border:2px solid #999;
   background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);font-weight:700;}
 #results{max-width:1000px;margin:10px auto;text-align:left;}
-.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:8px 0;}
+.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:8px 0; cursor:pointer;}
 .name{font-weight:700;}
 #speedArea{text-align:center;font-weight:bold;margin:6px 0;}
 #addHome{
@@ -130,8 +117,8 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 #qrBox{background:#fff;padding:20px;border-radius:10px;text-align:center;}
 #qrBox canvas{width:180px;height:180px;}
 .instruction{text-align:center;color:#666;margin:20px 0;font-size:16px;}
-
-/* ホテルブランドボタン */
+.instruction strong { font-weight: bold; }
+.instruction i { font-style: italic; }
 .hotel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -151,8 +138,6 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
               inset 0 -3px 4px rgba(0,0,0,.3);
   cursor: pointer;
 }
-
-/* 下部ボタン */
 #bottomBtns{
   position:fixed;
   right:10px;
@@ -178,7 +163,7 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 <body>
 
 <div id="newsBoard"><div id="newsContent">📻 NHKニュースを取得中...</div></div>
-<div id="updateTime">更新: --:--</div>
+<div id="updateTime">更新: --:-- <span id="loadStatus"></span></div>
 
 <div id="topBtns">
   <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=札幌+天気','_blank')">☁</button>
@@ -221,7 +206,7 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
   <button class="hotel-btn" data-brand="RANDOR">RANDOR</button>
 </div>
 
-<div class="instruction">MJMU All rights reserved Powerd by BANDO</div>
+<div class="instruction"><strong>MJMU</strong> All rights reserved Powerd by <i>BANDO</i></div>
 <div id="results"></div>
 
 <div id="bottomBtns">
@@ -271,11 +256,15 @@ function checkAdmin(){
   else alert('NG');
 }
 
-/* ---------- CSV読み込み ---------- */
+/* ---------- CSV読み込み + ダミーデータフォールバック ---------- */
 let DATA_ALL=[],DATA=[];
+const loadStatus = document.getElementById('loadStatus');
+
 async function loadCSV(){
   try {
-    const r=await fetch('hotels.csv');
+    // data/ フォルダ内の hotels.csv を読み込む（キャッシュ対策でタイムスタンプ付与）
+    const r=await fetch('data/hotels.csv?t=' + Date.now());
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const t=await r.text();
     DATA_ALL=t.trim().split(/\r?\n/).filter(Boolean).map(l=>{
       const p=l.split(',');
@@ -285,20 +274,35 @@ async function loadCSV(){
         address:p[2]||'',
         note:p[3]||''
       };
-      // ホテル名だけからキーワード生成
       hotelData.keywords = generateKeywordsFromName(hotelData.name);
       return hotelData;
     });
-    DATA=DATA_ALL.slice();
+    if (DATA_ALL.length === 0) throw new Error('データが空です');
+    loadStatus.textContent = `✅ ${DATA_ALL.length}件読み込み`;
     console.log('CSV読み込み成功:', DATA_ALL.length + '件');
   } catch(e) {
-    console.error('CSV読み込みエラー:', e);
-    DATA_ALL = [];
-    DATA = [];
+    console.error('CSV読み込みエラー、ダミーデータを使用:', e);
+    loadStatus.textContent = '⚠️ ダミーデータ表示中';
+    // ダミーデータ（検索テスト用）
+    DATA_ALL = [
+      {initial:'ア', name:'アパホテル〈札幌すすきの〉', address:'北海道札幌市中央区南5条西2', note:'大浴場あり', keywords:'アパ すすきの'},
+      {initial:'ア', name:'アパホテル〈札幌駅前〉', address:'北海道札幌市北区北6条西1', note:'', keywords:'アパ 駅前'},
+      {initial:'ト', name:'東横INN札幌駅北口', address:'北海道札幌市北区北7条西2', note:'朝食無料', keywords:'東横イン きたぐち'},
+      {initial:'マ', name:'マイステイズ札幌すすきの', address:'北海道札幌市中央区南5条西3', note:'', keywords:'マイステイズ すすきの'},
+      {initial:'リ', name:'リブマックス札幌', address:'北海道札幌市中央区南4条西5', note:'', keywords:'リブマックス'},
+      {initial:'ル', name:'ホテルルートイン札幌', address:'北海道札幌市白石区', note:'駐車場あり', keywords:'ルートイン'},
+      {initial:'R', name:'RANDORホテル札幌', address:'北海道札幌市中央区北1条西2', note:'', keywords:'ランドール'},
+      {initial:'H', name:'ホテルグレイスリー札幌', address:'北海道札幌市中央区北3条西4', note:'', keywords:'グレイスリー'},
+      {initial:'H', name:'ホテルリソル札幌', address:'北海道札幌市中央区南1条西1', note:'', keywords:'リソル'}
+    ];
   }
+  DATA = DATA_ALL.slice();
+  // 全件表示
+  render(DATA_ALL);
 }
+
 // ページ読み込み時にCSVを読み込む
-loadCSV();
+document.addEventListener('DOMContentLoaded', loadCSV);
 
 /* ---------- ホテル名からキーワード生成 ---------- */
 function generateKeywordsFromName(name) {
@@ -330,14 +334,16 @@ function render(list){
     el.innerHTML = '<div style="text-align:center;color:#666;margin:20px 0;">該当するホテルが見つかりませんでした</div>';
     return;
   }
-  el.innerHTML=list.map(h=>
-    `<div class='card' onclick='enlargeCard(${JSON.stringify(h).replace(/'/g, "\\'")})'>
+  // カードを生成
+  el.innerHTML=list.map(h=>{
+    const safeHotel = JSON.stringify(h).replace(/'/g, "\\'");
+    return `<div class='card' onclick='enlargeCard(${safeHotel})'>
       <div class='name'>${h.name}</div>
       <div>📍 ${h.address}</div>
       ${h.note?'<div>📝 '+h.note+'</div>':''}
       <div>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a> ｜ 🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></div>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ---------- 検索処理 ---------- */
@@ -378,13 +384,11 @@ function showInitials(g){
     });
   }
   
-  // 結果が3件以下の場合は直接表示
   if (filtered.length <= 3) {
     render(filtered);
     return;
   }
   
-  // 2段階フィルタリング：キーワード選択
   showKeywordSelection(filtered, g);
 }
 
@@ -398,7 +402,6 @@ function searchByBrand(brand){
 function showKeywordSelection(filtered, group) {
   const keywordMap = {};
   
-  // ホテル名から抽出したキーワードを集計
   filtered.forEach(hotel => {
     const keywords = (hotel.keywords || '').split(' ').filter(k => k.trim() && k.length > 1);
     keywords.forEach(keyword => {
@@ -409,7 +412,6 @@ function showKeywordSelection(filtered, group) {
     });
   });
   
-  // キーワードを件数順にソート
   const sortedKeywords = Object.keys(keywordMap)
     .sort((a, b) => keywordMap[b].length - keywordMap[a].length);
   
@@ -422,7 +424,6 @@ function showKeywordSelection(filtered, group) {
     }).join('');
   }
   
-  // 全件表示ボタン
   contentHTML += `<br><button onclick="showAllInGroup('${group}')" style="margin-top:10px;background:#eee;">全${filtered.length}件を表示</button>`;
   
   document.getElementById('overlay-content').innerHTML = contentHTML;
@@ -474,7 +475,6 @@ function selectKeyword(keyword, group) {
   closeOverlay();
   
   const matches = DATA_ALL.filter(h => {
-    // グループフィルタリング
     const firstChar = (h.name || '').replace(/^ホテル\s*/, '').trim().charAt(0);
     const ranges = {
       'あ':/[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
@@ -501,7 +501,6 @@ function selectKeyword(keyword, group) {
       groupMatch = set.includes(firstChar.toUpperCase());
     }
     
-    // キーワードマッチング
     const keywordMatch = (h.keywords || '').includes(keyword);
     
     return groupMatch && keywordMatch;
@@ -515,11 +514,15 @@ function closeOverlay() {
   document.getElementById('overlay').style.display = 'none';
 }
 
-// イベントリスナー設定
-document.querySelectorAll('[data-g]').forEach(b=>b.addEventListener('click', e=>showInitials(e.target.getAttribute('data-g'))));
-
-// ホテルブランドボタンのイベントリスナー
-document.querySelectorAll('[data-brand]').forEach(b=>b.addEventListener('click', e=>searchByBrand(e.target.getAttribute('data-brand'))));
+/* ---------- イベントリスナー ---------- */
+document.addEventListener('click', function(e) {
+  if (e.target.matches('[data-g]')) {
+    showInitials(e.target.getAttribute('data-g'));
+  }
+  if (e.target.matches('[data-brand]')) {
+    searchByBrand(e.target.getAttribute('data-brand'));
+  }
+});
 
 /* ---------- 拡大表示 ---------- */
 function enlargeCard(h){
@@ -544,14 +547,30 @@ document.getElementById('qrBtn').addEventListener('click',()=>{
 });
 function closeQR(){document.getElementById('qrModal').style.display='none';}
 
-/* ---------- ニュースライン ---------- */
+/* ---------- 新着情報（news.jsonから読み込み） ---------- */
+async function loadNewsFromJSON() {
+  try {
+    const r = await fetch('data/news.json?t=' + Date.now());
+    if (!r.ok) throw new Error('News file not found');
+    const news = await r.json();
+    
+    const newsItems = [news.news1, news.news2, news.news3].filter(Boolean);
+    document.getElementById('marqueeAll').textContent = newsItems.join(' ／ ') || '　';
+    console.log('ニュース読み込み成功:', newsItems);
+  } catch(e) {
+    console.log('ニュースJSON読み込み失敗、URLパラメータを使用:', e);
+    // フォールバック：URLパラメータから読み込み
+    applyNews();
+  }
+}
+
+/* ---------- ニュースライン（URLパラメータ版・従来方式） ---------- */
 function applyNews(){
   const p=new URLSearchParams(location.search);
   const joined=[p.get('news1'),p.get('news2'),p.get('news3')]
     .filter(Boolean).map(decodeURIComponent).join(' ／ ');
   document.getElementById('marqueeAll').textContent=joined||'　';
 }
-applyNews();
 
 /* ---------- スピードメーター ---------- */
 let speedWatchID=null;
@@ -582,16 +601,12 @@ function showSpeed(pos){
 const RSS_URL="https://www.nhk.or.jp/rss/news/cat0.xml";
 async function fetchRSS(){
   try {
-    // CORSプロキシを使用
     const proxyUrl = 'https://corsproxy.io/?';
     const response = await fetch(proxyUrl + encodeURIComponent(RSS_URL));
-    
     if (!response.ok) throw new Error('Network response was not ok');
-    
     const text = await response.text();
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, "text/xml");
-    
     const items = xml.querySelectorAll("item");
     const news = Array.from(items).slice(0, 5).map(item => {
       const title = item.querySelector("title")?.textContent || "タイトルなし";
@@ -601,13 +616,11 @@ async function fetchRSS(){
 
     const content = document.getElementById("newsContent");
     content.innerHTML = '';
-    
     news.forEach((n, i) => {
       const prefix = i === 0 ? '🚨' : '📻';
       const el = document.createElement("span");
       el.innerHTML = `${prefix} <a href="${n.link}" target="_blank" style="color:#ffa500;text-decoration:none;border-bottom:1px dotted #ffa500;">${n.title}</a>`;
       content.appendChild(el);
-      
       if (i < news.length - 1) {
         const sep = document.createElement("span");
         sep.textContent = " ● ";
@@ -617,17 +630,16 @@ async function fetchRSS(){
     });
 
     document.getElementById("updateTime").textContent = `更新: ${new Date().toLocaleTimeString()}`;
-    
   } catch(e) {
     console.log("ニュース取得失敗:", e);
     document.getElementById("newsContent").innerHTML = "📻 ニュース取得に失敗しました";
   }
 }
 
-// ページ読み込み時にNHKニュースを取得
+// ページ読み込み時の処理
 document.addEventListener('DOMContentLoaded', function() {
   fetchRSS();
-  // 60秒ごとに更新
+  loadNewsFromJSON(); // news.jsonから新着情報を読み込み
   setInterval(fetchRSS, 60000);
 });
 </script>
