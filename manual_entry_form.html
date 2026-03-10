@@ -8,6 +8,11 @@
   body{font-family:Meiryo,'メイリオ',sans-serif;background:linear-gradient(145deg,#c0c0c0,#e0e0e0);margin:0;padding:14px;color:#222}
   .section-title{font-size:20px;margin:10px 0 6px;text-align:center;font-weight:bold}
   .panel{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:10px auto;max-width:1100px}
+  /* 新着情報パネルをミントグリーンに */
+  .panel:first-of-type {
+    background: #e0f0e8;  /* ミントグリーン */
+    border: 2px solid #8ab3a0;
+  }
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .row input[type="text"], .row textarea{flex:1;padding:8px;border:1px solid #bbb;border-radius:6px;font-size:16px}
   .row label{min-width:72px}
@@ -210,8 +215,9 @@ async function init(){
   viewIndex = 0;
   updateForm();
   
-  // 新着情報があれば表示
-  loadNewsFromURL();
+  // 新着情報を読み込む（優先順位：JSON → URLパラメータ）
+  await loadNewsFromJSON();    // ← 追加：news.jsonから読み込み
+  loadNewsFromURL();           // URLパラメータで上書き（あれば）
 }
 
 /* ====== URLから新着情報を読み込み ====== */
@@ -220,6 +226,24 @@ function loadNewsFromURL() {
   document.getElementById('n1').value = params.get('news1') || '';
   document.getElementById('n2').value = params.get('news2') || '';
   document.getElementById('n3').value = params.get('news3') || '';
+}
+
+/* ====== news.jsonから新着情報を読み込む ====== */
+async function loadNewsFromJSON() {
+  try {
+    const r = await fetch(NEWS_PATH, { cache: 'no-store' });
+    if (!r.ok) throw new Error('News file not found');
+    const news = await r.json();
+    
+    document.getElementById('n1').value = news.news1 || '';
+    document.getElementById('n2').value = news.news2 || '';
+    document.getElementById('n3').value = news.news3 || '';
+    
+    console.log('新着情報を読み込みました:', news);
+  } catch (e) {
+    console.log('新着情報の読み込みに失敗（新規作成時は無視）:', e);
+    // ファイルがなければ何もしない（空欄のまま）
+  }
 }
 
 /* ====== CSV読込（4列）- ヘッダー行を自動検出して除去 ====== */
