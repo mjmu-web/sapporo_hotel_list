@@ -13,14 +13,6 @@ body{
   margin:0;
   padding:16px 16px 70px 16px;
 }
-#loadStatus {
-  font-size:0.8em;
-  color:#333;
-  background:#ffc;
-  padding:2px 8px;
-  border-radius:12px;
-  display:inline-block;
-}
 /* ===== NHKニュース（最上部） ===== */
 #newsBoard {
   background:#000;
@@ -184,10 +176,10 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 
 <div id="newsBoard"><div id="newsContent">📻 NHKニュースを取得中...</div></div>
 
-<!-- 情報バー：左にスリープ防止、右に更新時間 -->
+<!-- 情報バー：左にスリープ防止、右に更新時間（loadStatus削除済み） -->
 <div id="infoBar">
   <div id="wakeLockIndicator" onclick="toggleWakeLock()" title="クリックでスリープ防止をON/OFF">💤 スリープ防止: OFF</div>
-  <div id="updateTime">更新: --:-- <span id="loadStatus"></span></div>
+  <div id="updateTime">更新: --:--</div>
 </div>
 
 <div id="topBtns">
@@ -305,7 +297,7 @@ document.addEventListener('visibilitychange', async () => {
   }
 });
 
-/* ====== 以下、既存の機能 ====== */
+/* ====== 以下、既存の機能（loadStatus関連を削除） ====== */
 let installPromptEvent=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
@@ -333,7 +325,6 @@ function checkAdmin(){
 }
 
 let DATA_ALL=[],DATA=[];
-const loadStatus = document.getElementById('loadStatus');
 
 async function loadCSV(){
   try {
@@ -352,9 +343,7 @@ async function loadCSV(){
       return hotelData;
     });
     if (DATA_ALL.length === 0) throw new Error('データが空です');
-    loadStatus.textContent = `✅ ${DATA_ALL.length}件読み込み`;
   } catch(e) {
-    loadStatus.textContent = '⚠️ ダミーデータ';
     DATA_ALL = [
       {initial:'ア', name:'アパホテル〈札幌すすきの〉', address:'北海道札幌市中央区南5条西2', note:'大浴場あり', keywords:'アパ すすきの'},
       {initial:'ア', name:'アパホテル〈札幌駅前〉', address:'北海道札幌市北区北6条西1', note:'', keywords:'アパ 駅前'},
@@ -678,7 +667,7 @@ async function fetchRSS(){
       }
     });
 
-    document.getElementById("updateTime").innerHTML = `更新: ${new Date().toLocaleTimeString()} <span id="loadStatus"></span>`;
+    document.getElementById("updateTime").textContent = `更新: ${new Date().toLocaleTimeString()}`;
   } catch(e) {
     document.getElementById("newsContent").innerHTML = "📻 ニュース取得に失敗しました";
   }
