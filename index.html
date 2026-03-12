@@ -11,16 +11,7 @@ body{
   font-family:Meiryo,'メイリオ',sans-serif;
   background:linear-gradient(145deg,#c0c0c0,#e0e0e0);
   margin:0;
-  /* 下部に70pxの余白（固定ボタン対策） */
   padding:16px 16px 70px 16px;
-}
-#loadStatus {
-  font-size:0.8em;
-  color:#333;
-  background:#ffc;
-  padding:2px 8px;
-  border-radius:12px;
-  display:inline-block;
 }
 /* ===== NHKニュース（最上部） ===== */
 #newsBoard {
@@ -46,12 +37,33 @@ body{
   100% { transform: translateX(-100%); }
 }
 #newsBoard:hover #newsContent { animation-play-state: paused; }
+/* 更新時間とスリープ防止を横並びにするコンテナ */
+#infoBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -5px 8px 10px 0;
+  font-size: 0.8em;
+}
 #updateTime {
-  text-align:right;
-  font-size:0.8em;
-  color:#000;
-  opacity:0.7;
-  margin:-5px 8px 10px 0;
+  color: #000;
+  opacity: 0.7;
+}
+/* スリープ防止インジケーター */
+#wakeLockIndicator {
+  display: inline-block;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: background 0.3s;
+}
+#wakeLockIndicator.active {
+  background: rgba(0,100,0,0.8);
 }
 h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 .metal-round-lg{
@@ -163,7 +175,12 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 <body>
 
 <div id="newsBoard"><div id="newsContent">📻 NHKニュースを取得中...</div></div>
-<div id="updateTime">更新: --:-- <span id="loadStatus"></span></div>
+
+<!-- 情報バー：左にスリープ防止、右に更新時間（loadStatus削除済み） -->
+<div id="infoBar">
+  <div id="wakeLockIndicator" onclick="toggleWakeLock()" title="クリックでスリープ防止をON/OFF">💤 スリープ防止: OFF</div>
+  <div id="updateTime">更新: --:--</div>
+</div>
 
 <div id="topBtns">
   <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=札幌+天気','_blank')">☁</button>
@@ -228,7 +245,59 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script>
-/* ---------- ホーム追加対応 ---------- */
+/* ====== スリープ防止機能 ====== */
+let wakeLock = null;
+const wakeLockIndicator = document.getElementById('wakeLockIndicator');
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLockIndicator.innerHTML = '🔋 スリープ防止: ON';
+      wakeLockIndicator.classList.add('active');
+      
+      wakeLock.addEventListener('release', () => {
+        wakeLockIndicator.innerHTML = '💤 スリープ防止: OFF';
+        wakeLockIndicator.classList.remove('active');
+        wakeLock = null;
+      });
+      
+      console.log('スリープ防止を有効にしました');
+    } else {
+      wakeLockIndicator.innerHTML = '❌ 未対応';
+    }
+  } catch (err) {
+    console.error('スリープ防止の有効化に失敗:', err);
+    wakeLockIndicator.innerHTML = '❌ 失敗';
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock !== null) {
+    await wakeLock.release();
+    wakeLock = null;
+  }
+}
+
+async function toggleWakeLock() {
+  if (wakeLock === null) {
+    await requestWakeLock();
+  } else {
+    await releaseWakeLock();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  requestWakeLock();
+});
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && wakeLock === null) {
+    await requestWakeLock();
+  }
+});
+
+/* ====== 以下、既存の機能（loadStatus関連を削除） ====== */
 let installPromptEvent=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
@@ -245,7 +314,6 @@ document.getElementById('addHome').addEventListener('click',()=>{
   }
 });
 
-/* ---------- 管理者 ---------- */
 function toggleAdmin(){
   const a=document.getElementById('admin');
   a.style.display=a.style.display==='block'?'none':'block';
@@ -256,13 +324,10 @@ function checkAdmin(){
   else alert('NG');
 }
 
-/* ---------- CSV読み込み + ダミーデータフォールバック ---------- */
 let DATA_ALL=[],DATA=[];
-const loadStatus = document.getElementById('loadStatus');
 
 async function loadCSV(){
   try {
-    // data/ フォルダ内の hotels.csv を読み込む（キャッシュ対策でタイムスタンプ付与）
     const r=await fetch('data/hotels.csv?t=' + Date.now());
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const t=await r.text();
@@ -278,12 +343,7 @@ async function loadCSV(){
       return hotelData;
     });
     if (DATA_ALL.length === 0) throw new Error('データが空です');
-    loadStatus.textContent = `✅ ${DATA_ALL.length}件読み込み`;
-    console.log('CSV読み込み成功:', DATA_ALL.length + '件');
   } catch(e) {
-    console.error('CSV読み込みエラー、ダミーデータを使用:', e);
-    loadStatus.textContent = '⚠️ ダミーデータ表示中';
-    // ダミーデータ（検索テスト用）
     DATA_ALL = [
       {initial:'ア', name:'アパホテル〈札幌すすきの〉', address:'北海道札幌市中央区南5条西2', note:'大浴場あり', keywords:'アパ すすきの'},
       {initial:'ア', name:'アパホテル〈札幌駅前〉', address:'北海道札幌市北区北6条西1', note:'', keywords:'アパ 駅前'},
@@ -297,14 +357,11 @@ async function loadCSV(){
     ];
   }
   DATA = DATA_ALL.slice();
-  // 全件表示
   render(DATA_ALL);
 }
 
-// ページ読み込み時にCSVを読み込む
 document.addEventListener('DOMContentLoaded', loadCSV);
 
-/* ---------- ホテル名からキーワード生成 ---------- */
 function generateKeywordsFromName(name) {
   return name
     .replace(/ホテル/g, ' ')
@@ -318,7 +375,6 @@ function generateKeywordsFromName(name) {
     .join(' ');
 }
 
-/* ---------- 地図リンク ---------- */
 function mapLink(name){
   const ua=navigator.userAgent.toLowerCase();
   const q=encodeURIComponent(name);
@@ -327,14 +383,12 @@ function mapLink(name){
     : `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-/* ---------- リスト描画 ---------- */
 function render(list){
   const el=document.getElementById('results');
   if(list.length === 0){
     el.innerHTML = '<div style="text-align:center;color:#666;margin:20px 0;">該当するホテルが見つかりませんでした</div>';
     return;
   }
-  // カードを生成
   el.innerHTML=list.map(h=>{
     const safeHotel = JSON.stringify(h).replace(/'/g, "\\'");
     return `<div class='card' onclick='enlargeCard(${safeHotel})'>
@@ -346,7 +400,6 @@ function render(list){
   }).join('');
 }
 
-/* ---------- 検索処理 ---------- */
 function showInitials(g){
   const kana=['あ','か','さ','た','な','は','ま','や','ら','わ'];
   
@@ -392,13 +445,11 @@ function showInitials(g){
   showKeywordSelection(filtered, g);
 }
 
-/* ---------- ホテルブランド検索 ---------- */
 function searchByBrand(brand){
   const filtered = DATA_ALL.filter(h => h.name.includes(brand));
   render(filtered);
 }
 
-/* ---------- キーワード選択 ---------- */
 function showKeywordSelection(filtered, group) {
   const keywordMap = {};
   
@@ -430,7 +481,6 @@ function showKeywordSelection(filtered, group) {
   document.getElementById('overlay').style.display = 'flex';
 }
 
-/* ---------- グループ全件表示 ---------- */
 function showAllInGroup(group) {
   closeOverlay();
   
@@ -470,7 +520,6 @@ function showAllInGroup(group) {
   render(filtered);
 }
 
-/* ---------- キーワードで絞り込み ---------- */
 function selectKeyword(keyword, group) {
   closeOverlay();
   
@@ -509,12 +558,10 @@ function selectKeyword(keyword, group) {
   render(matches);
 }
 
-/* ---------- オーバーレイ閉じる ---------- */
 function closeOverlay() {
   document.getElementById('overlay').style.display = 'none';
 }
 
-/* ---------- イベントリスナー ---------- */
 document.addEventListener('click', function(e) {
   if (e.target.matches('[data-g]')) {
     showInitials(e.target.getAttribute('data-g'));
@@ -524,7 +571,6 @@ document.addEventListener('click', function(e) {
   }
 });
 
-/* ---------- 拡大表示 ---------- */
 function enlargeCard(h){
   const modal=document.getElementById('modal');
   const content=document.getElementById('modal-content');
@@ -539,7 +585,6 @@ function enlargeCard(h){
 }
 function closeModal(){document.getElementById('modal').style.display='none';}
 
-/* ---------- QRコード ---------- */
 document.getElementById('qrBtn').addEventListener('click',()=>{
   const url=location.origin+location.pathname;
   new QRious({element:document.getElementById('qrCanvas'),value:url,size:180});
@@ -547,7 +592,6 @@ document.getElementById('qrBtn').addEventListener('click',()=>{
 });
 function closeQR(){document.getElementById('qrModal').style.display='none';}
 
-/* ---------- 新着情報（news.jsonから読み込み） ---------- */
 async function loadNewsFromJSON() {
   try {
     const r = await fetch('data/news.json?t=' + Date.now());
@@ -556,15 +600,11 @@ async function loadNewsFromJSON() {
     
     const newsItems = [news.news1, news.news2, news.news3].filter(Boolean);
     document.getElementById('marqueeAll').textContent = newsItems.join(' ／ ') || '　';
-    console.log('ニュース読み込み成功:', newsItems);
   } catch(e) {
-    console.log('ニュースJSON読み込み失敗、URLパラメータを使用:', e);
-    // フォールバック：URLパラメータから読み込み
     applyNews();
   }
 }
 
-/* ---------- ニュースライン（URLパラメータ版・従来方式） ---------- */
 function applyNews(){
   const p=new URLSearchParams(location.search);
   const joined=[p.get('news1'),p.get('news2'),p.get('news3')]
@@ -572,7 +612,6 @@ function applyNews(){
   document.getElementById('marqueeAll').textContent=joined||'　';
 }
 
-/* ---------- スピードメーター ---------- */
 let speedWatchID=null;
 document.getElementById('speedBtn').addEventListener('click',()=>{
   if(speedWatchID){
@@ -597,7 +636,6 @@ function showSpeed(pos){
   el.innerHTML=`<span style="font-size:${size};color:${color};">${kmh.toFixed(1)} km/h</span>`;
 }
 
-/* ---------- NHKニュースRSS ---------- */
 const RSS_URL="https://www.nhk.or.jp/rss/news/cat0.xml";
 async function fetchRSS(){
   try {
@@ -631,15 +669,13 @@ async function fetchRSS(){
 
     document.getElementById("updateTime").textContent = `更新: ${new Date().toLocaleTimeString()}`;
   } catch(e) {
-    console.log("ニュース取得失敗:", e);
     document.getElementById("newsContent").innerHTML = "📻 ニュース取得に失敗しました";
   }
 }
 
-// ページ読み込み時の処理
 document.addEventListener('DOMContentLoaded', function() {
   fetchRSS();
-  loadNewsFromJSON(); // news.jsonから新着情報を読み込み
+  loadNewsFromJSON();
   setInterval(fetchRSS, 60000);
 });
 </script>
