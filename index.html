@@ -191,7 +191,7 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 <div id="topBtns">
   <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=札幌+天気','_blank')">☁</button>
   <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=日ハム+試合結果','_blank')">⚾</button>
-  <button class="metal-round-lg" onclick="window.open('https://www.hokkaido-airports.com/ja/new-chitose/airport/fis/?purposeType=departure&airlineType=domestic&airport=&airline=&flightNumber=&timeFrom=&timeTo=#anchor-result')">✈</button>
+  <button class="metal-round-lg" onclick="window.open('https://www.hokkaido-airports.com/ja/new-chitose/airport/fis/?purposeType=departure&airlineType=domestic&airport=&airline=&flightNumber=&timeFrom=&timeTo=#anchor-result')">✈️</button>
   <button class="metal-round-lg" onclick="window.open('https://www3.jrhokkaido.co.jp/webunkou/')">🚃</button>
   <button class="metal-round-lg" onclick="window.open('https://www.drivetraffic.jp/realtime-area?t=r&lat=42,56,55.18&lon=141,30,57.85&lv=2')">🛣️</button>
 </div>
@@ -415,10 +415,10 @@ function showInitials(g){
     const ranges={
       'あ':/[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
       'か':/[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
-      'さ':/[さしすせそサシスセソ]/,
+      'さ':/[さしすせそざじずぜぞサシスセソザジズゼゾ]/, // ザ行を追加
       'た':/[たちつてとだぢづでどタチツテトダヂヅデド]/,
       'な':/[なにぬねのナニヌネノ]/,
-      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホ]/,
+      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
       'ま':/[まみむめもマミムメモ]/,
       'や':/[やゆよゃゅょヤユヨ]/,
       'ら':/[らりるれろラリルレロ]/,
@@ -496,10 +496,10 @@ function showAllInGroup(group) {
     const ranges={
       'あ':/[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
       'か':/[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
-      'さ':/[さしすせそサシスセソ]/,
+      'さ':/[さしすせそざじずぜぞサシスセソザジズゼゾ]/, // ザ行を追加
       'た':/[たちつてとだぢづでどタチツテトダヂヅデド]/,
       'な':/[なにぬねのナニヌネノ]/,
-      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホ]/,
+      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
       'ま':/[まみむめもマミムメモ]/,
       'や':/[やゆよゃゅょヤユヨ]/,
       'ら':/[らりるれろラリルレロ]/,
@@ -534,10 +534,10 @@ function selectKeyword(keyword, group) {
     const ranges = {
       'あ':/[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
       'か':/[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
-      'さ':/[さしすせそサシスセソ]/,
+      'さ':/[さしすせそざじずぜぞサシスセソザジズゼゾ]/, // ザ行を追加
       'た':/[たちつてとだぢづでどタチツテトダヂヅデド]/,
       'な':/[なにぬねのナニヌネノ]/,
-      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホ]/,
+      'は':/[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
       'ま':/[まみむめもマミムメモ]/,
       'や':/[やゆよゃゅょヤユヨ]/,
       'ら':/[らりるれろラリルレロ]/,
@@ -604,10 +604,21 @@ async function loadNewsFromJSON() {
     if (!r.ok) throw new Error('News file not found');
     const news = await r.json();
     
-    const newsItems = [news.news1, news.news2, news.news3].filter(Boolean);
-    document.getElementById('marqueeAll').textContent = newsItems.join(' ／ ') || '　';
+    // URLパラメータがない場合のみJSONの内容を表示
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasUrlParams = urlParams.has('news1') || urlParams.has('news2') || urlParams.has('news3');
+    
+    if (!hasUrlParams) {
+      const newsItems = [news.news1, news.news2, news.news3].filter(Boolean);
+      document.getElementById('marqueeAll').textContent = newsItems.join(' ／ ') || '　';
+      console.log('news.jsonから読み込み:', newsItems);
+    }
   } catch(e) {
-    applyNews();
+    console.log('news.json読み込みエラー:', e);
+    // エラー時は既存のapplyNewsを呼び出し
+    if (!document.getElementById('marqueeAll').textContent) {
+      applyNews();
+    }
   }
 }
 
@@ -642,7 +653,7 @@ function showSpeed(pos){
   el.innerHTML=`<span style="font-size:${size};color:${color};">${kmh.toFixed(1)} km/h</span>`;
 }
 
-// ===== 修正：NHKニュース取得（複数のプロキシを試行） =====
+// ===== NHKニュース取得（複数のプロキシを試行） =====
 const RSS_URL = "https://www.nhk.or.jp/rss/news/cat0.xml";
 
 async function fetchRSS() {
@@ -713,10 +724,31 @@ async function fetchRSS() {
   console.error('すべてのプロキシが失敗しました');
 }
 
+// DOMContentLoadedイベントを修正（プレビューモード対応）
 document.addEventListener('DOMContentLoaded', function() {
-  fetchRSS();
-  loadNewsFromJSON();
-  setInterval(fetchRSS, 60000); // 1分ごとに更新
+  // まずURLパラメータをチェック（プレビュー用）
+  const urlParams = new URLSearchParams(window.location.search);
+  const news1 = urlParams.get('news1');
+  const news2 = urlParams.get('news2');
+  const news3 = urlParams.get('news3');
+  
+  // URLパラメータがある場合（プレビューモード）
+  if (news1 || news2 || news3) {
+    console.log('プレビューモード: URLパラメータから新着情報を読み込み');
+    const marqueeEl = document.getElementById('marqueeAll');
+    const newsItems = [news1, news2, news3].filter(Boolean);
+    marqueeEl.textContent = newsItems.join(' ／ ') || '　';
+    
+    // ニュースRSSも取得（バックグラウンドで）
+    fetchRSS();
+  } else {
+    // URLパラメータがない場合（通常モード）
+    console.log('通常モード: news.jsonから新着情報を読み込み');
+    loadNewsFromJSON();
+    fetchRSS();
+  }
+  
+  setInterval(fetchRSS, 60000); // 1分ごとにRSS更新
 });
 </script>
 </body>
