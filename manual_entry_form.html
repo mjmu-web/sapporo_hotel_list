@@ -203,7 +203,6 @@
     <div class="row"><label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）"></div>
     <div class="right">
       <button class="btn" onclick="previewWithNews()">🔍 プレビュー（URL生成）</button>
-      <!-- 新着情報保存ボタンを削除（GitHub保存のみに統合） -->
     </div>
     <div class="hint">※ 「プレビュー」でトップページを確認（GitHub保存は下部の「すべてGitHubに保存」で実行）</div>
   </div>
@@ -338,8 +337,9 @@
           <div class="setting-group">
             <h4>📐 レイアウト</h4>
             <div class="setting-row">
-              <span>行数/頁:</span>
-              <input type="number" id="rowsPerPage" value="40" min="10" max="100" style="width:60px;">
+              <span>目標行数/頁:</span>
+              <input type="number" id="rowsPerPage" value="40" min="10" max="100" style="width:70px;">
+              <span class="hint" style="font-size:11px;">※1ページ目のヘッダー分は自動調整</span>
             </div>
             <div class="setting-row">
               <span>本文:</span>
@@ -355,7 +355,7 @@
         <!-- 全ページプレビューエリア -->
         <div class="preview-container">
           <div class="preview-header">
-            <span>🔍 全ページプレビュー（全${Math.ceil(DATA_ALL.length/40)}ページ）</span>
+            <span>🔍 全ページプレビュー</span>
             <button onclick="refreshFullPreview()">🔄 更新</button>
           </div>
           <div id="fullPreviewArea" class="preview-area">
@@ -386,12 +386,13 @@ let DATA_ALL = [];
 let VIEW = [];
 let viewIndex = 0;
 let currentGroup = null;
+let previewTimeout = null;
 
 /* ====== ルール（ザ行修正済み） ====== */
 const KANA_RANGES = {
   'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
   'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
-  'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/, // ザ行を追加
+  'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/,
   'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/,
   'な': /[なにぬねのナニヌネノ]/,
   'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
@@ -465,35 +466,21 @@ async function loadNewsFromJSON() {
   }
 }
 
-/* ====== プレビュー（URL生成）- 修正版 ====== */
+/* ====== プレビュー（URL生成） ====== */
 function previewWithNews() {
-  // 入力値を取得（空の場合はパラメータ自体を省略）
   const n1 = document.getElementById('n1').value;
   const n2 = document.getElementById('n2').value;
   const n3 = document.getElementById('n3').value;
   
   const params = new URLSearchParams();
+  if (n1 && n1.trim() !== '') params.set('news1', n1);
+  if (n2 && n2.trim() !== '') params.set('news2', n2);
+  if (n3 && n3.trim() !== '') params.set('news3', n3);
   
-  // 値が存在する場合のみパラメータに追加
-  if (n1 && n1.trim() !== '') {
-    params.set('news1', n1);
-  }
-  if (n2 && n2.trim() !== '') {
-    params.set('news2', n2);
-  }
-  if (n3 && n3.trim() !== '') {
-    params.set('news3', n3);
-  }
-  
-  // クエリ文字列を構築
   const queryString = params.toString();
   const baseUrl = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html');
   const url = queryString ? baseUrl + '?' + queryString : baseUrl;
   
-  console.log('プレビューURL:', url); // デバッグ用
-  console.log('新着情報:', { n1, n2, n3 }); // デバッグ用
-  
-  // 新しいタブで開く
   window.open(url, '_blank');
 }
 
@@ -570,10 +557,16 @@ function bindUI() {
   document.getElementById('csvFile').addEventListener('change', onImportCSV);
   document.getElementById('btnNewAdd').addEventListener('click', addNewHotel);
   
-  document.getElementById('includeQR').addEventListener('change', updateQRPreview);
-  document.getElementById('qrSize').addEventListener('change', updateQRPreview);
+  document.getElementById('includeQR').addEventListener('change', () => {
+    updateQRPreview();
+    schedulePreviewUpdate();
+  });
+  document.getElementById('qrSize').addEventListener('change', () => {
+    updateQRPreview();
+    schedulePreviewUpdate();
+  });
   
-  // 設定変更時にプレビュー更新
+  // 設定変更時にプレビュー更新（デバウンス付き）
   const previewTriggers = ['printTitle', 'titleFontSize', 'includeQR', 'qrWithTitle', 'qrSize', 
    'printInitial', 'printName', 'printAddress', 'printNote', 'printNews', 
    'printPageNumbers', 'rowsPerPage', 'bodyFontSize'];
@@ -581,15 +574,24 @@ function bindUI() {
   previewTriggers.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.addEventListener('change', () => setTimeout(refreshFullPreview, 50));
+      el.addEventListener('change', () => schedulePreviewUpdate());
       if (el.type === 'text' || el.type === 'number') {
-        el.addEventListener('input', () => setTimeout(refreshFullPreview, 50));
+        el.addEventListener('input', () => schedulePreviewUpdate());
       }
     }
   });
 }
 
-/* ====== グループ適用（ザ行対応済み） ====== */
+function schedulePreviewUpdate() {
+  if (previewTimeout) clearTimeout(previewTimeout);
+  previewTimeout = setTimeout(() => {
+    if (document.getElementById('printModal').style.display === 'flex') {
+      refreshFullPreview();
+    }
+  }, 300);
+}
+
+/* ====== グループ適用 ====== */
 function applyGroup(g) {
   currentGroup = g;
   if (KANA_RANGES[g]) {
@@ -749,6 +751,9 @@ function downloadExcel() {
 /* ====== 印刷モーダル関連 ====== */
 function openPrintModal() {
   document.getElementById('printModal').style.display = 'flex';
+  // QRコード表示状態を初期化
+  const includeQR = document.getElementById('includeQR').checked;
+  document.getElementById('qrPreview').style.display = includeQR ? 'block' : 'none';
   if (typeof QRCode !== 'undefined') {
     setTimeout(updateQRPreview, 100);
   }
@@ -775,16 +780,50 @@ function updateQRPreview() {
     }, function(err, url) {
       if (!err) {
         document.getElementById('qrPreviewImg').src = url;
-        refreshFullPreview();
+        schedulePreviewUpdate();
       }
     });
   } else {
     qrPreview.style.display = 'none';
-    refreshFullPreview();
+    schedulePreviewUpdate();
   }
 }
 
-/* ====== 全ページ印刷プレビュー ====== */
+/* ====== 1ページあたりの行数を動的に計算 ====== */
+function calculateRowsPerPage(options) {
+  const targetRows = options.rowsPerPage;
+  // 1ページ目はヘッダー分の行数を減らす（簡易計算: ヘッダー分として5〜8行分の余裕を持たせる）
+  // 実際の印刷では、表題・QR・新着情報で約4〜6行分の高さを消費する
+  const headerBufferRows = 6; // ヘッダー分のバッファ（行換算）
+  return Math.max(10, targetRows - headerBufferRows);
+}
+
+/* ====== 動的改ページでページ分割 ====== */
+function splitDataIntoPages(data, options) {
+  const pages = [];
+  const rowsPerNormalPage = options.rowsPerPage;
+  const rowsPerFirstPage = calculateRowsPerPage(options);
+  
+  let remainingData = [...data];
+  
+  // 1ページ目（ヘッダーあり）
+  if (remainingData.length > 0) {
+    const firstPageRows = Math.min(rowsPerFirstPage, remainingData.length);
+    pages.push(remainingData.slice(0, firstPageRows));
+    remainingData = remainingData.slice(firstPageRows);
+  }
+  
+  // 2ページ目以降（ヘッダーなし、通常の行数）
+  while (remainingData.length > 0) {
+    const pageRows = Math.min(rowsPerNormalPage, remainingData.length);
+    pages.push(remainingData.slice(0, pageRows));
+    remainingData = remainingData.slice(pageRows);
+  }
+  
+  return pages;
+}
+
+/* ====== 全ページ印刷プレビュー（動的改ページ版） ====== */
 async function refreshFullPreview() {
   if (!DATA_ALL || DATA_ALL.length === 0) {
     document.getElementById('fullPreviewArea').innerHTML = '<div style="padding:20px; text-align:center;">データがありません</div>';
@@ -807,7 +846,8 @@ async function refreshFullPreview() {
     bodyFontSize: document.getElementById('bodyFontSize').value
   };
   
-  const previewArea = document.getElementById('fullPreviewArea');
+  // 動的改ページ
+  const pages = splitDataIntoPages(DATA_ALL, options);
   
   // QRコード生成
   let qrDataURL = null;
@@ -823,42 +863,40 @@ async function refreshFullPreview() {
     }
   }
   
+  const previewArea = document.getElementById('fullPreviewArea');
   let html = '<div style="font-family:Meiryo,\'メイリオ\',sans-serif;">';
   
-  const rowsPerPage = options.rowsPerPage;
-  const totalPages = Math.ceil(DATA_ALL.length / rowsPerPage);
-  
-  // 全ページをループ
-  for (let page = 0; page < totalPages; page++) {
-    const startIdx = page * rowsPerPage;
-    const endIdx = Math.min(startIdx + rowsPerPage, DATA_ALL.length);
-    const pageData = DATA_ALL.slice(startIdx, endIdx);
+  // 各ページを生成
+  for (let page = 0; page < pages.length; page++) {
+    const pageData = pages[page];
     
     html += '<div class="print-preview-page" style="background:white;">';
     
-    // ヘッダー
-    if (options.includeQR && options.qrWithTitle && qrDataURL && page === 0) {
-      html += '<div class="print-preview-header">';
-      html += `<div class="print-preview-title" style="font-size:${options.titleSize};">${options.title}</div>`;
-      html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-      html += '</div>';
-    } else if (options.includeQR && qrDataURL && page === 0) {
-      html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
-      html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-    } else if (page === 0) {
-      html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
-    }
-    
-    // 新着情報（1ページ目のみ）
-    if (options.showNews && page === 0) {
-      const newsItems = [
-        document.getElementById('n1').value,
-        document.getElementById('n2').value,
-        document.getElementById('n3').value
-      ].filter(Boolean);
+    // ヘッダー（1ページ目のみ）
+    if (page === 0) {
+      if (options.includeQR && options.qrWithTitle && qrDataURL) {
+        html += '<div class="print-preview-header">';
+        html += `<div class="print-preview-title" style="font-size:${options.titleSize};">${options.title}</div>`;
+        html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+        html += '</div>';
+      } else if (options.includeQR && qrDataURL) {
+        html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+        html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+      } else {
+        html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+      }
       
-      if (newsItems.length > 0) {
-        html += `<div class="print-preview-news">📢 ${newsItems.join(' ／ ')}</div>`;
+      // 新着情報
+      if (options.showNews) {
+        const newsItems = [
+          document.getElementById('n1').value,
+          document.getElementById('n2').value,
+          document.getElementById('n3').value
+        ].filter(Boolean);
+        
+        if (newsItems.length > 0) {
+          html += `<div class="print-preview-news">📢 ${newsItems.join(' ／ ')}</div>`;
+        }
       }
     }
     
@@ -870,7 +908,7 @@ async function refreshFullPreview() {
     if (options.showNote) tableHeader += '<th>備考</th>';
     tableHeader += '</tr>';
     
-    html += `<table class="print-preview-table">`;
+    html += `<table class="print-preview-table" style="font-size:${options.bodyFontSize};">`;
     html += `<thead>${tableHeader}</thead><tbody>`;
     
     pageData.forEach(h => {
@@ -886,7 +924,7 @@ async function refreshFullPreview() {
     
     // ページ番号
     if (options.showPageNumbers) {
-      html += `<div class="print-preview-page-num">- ${page + 1}/${totalPages} -</div>`;
+      html += `<div class="print-preview-page-num">- ${page + 1}/${pages.length} -</div>`;
     }
     
     html += '</div>';
@@ -917,7 +955,6 @@ async function executePrint() {
   await generatePrintHTML(options);
   closePrintModal();
   
-  // 少し遅延させてから印刷ダイアログを表示
   setTimeout(() => {
     window.print();
   }, 200);
@@ -940,45 +977,43 @@ async function generatePrintHTML(options) {
     }
   }
   
+  // 動的改ページ
+  const pages = splitDataIntoPages(DATA_ALL, options);
+  
   const printArea = document.getElementById('printArea');
   let html = '';
   
-  const rowsPerPage = options.rowsPerPage;
-  const totalPages = Math.ceil(DATA_ALL.length / rowsPerPage);
-  
-  for (let page = 0; page < totalPages; page++) {
-    const startIdx = page * rowsPerPage;
-    const endIdx = Math.min(startIdx + rowsPerPage, DATA_ALL.length);
-    const pageData = DATA_ALL.slice(startIdx, endIdx);
+  for (let page = 0; page < pages.length; page++) {
+    const pageData = pages[page];
     
-    // 改ページ
     if (page > 0) {
       html += '<div class="page-break"></div>';
     }
     
-    // ヘッダー
-    if (options.includeQR && options.qrWithTitle && qrDataURL && page === 0) {
-      html += '<div class="print-header">';
-      html += `<div class="print-title" style="font-size:${options.titleSize};">${options.title}</div>`;
-      html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-      html += '</div>';
-    } else if (options.includeQR && qrDataURL && page === 0) {
-      html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
-      html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-    } else if (page === 0) {
-      html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
-    }
-    
-    // 新着情報（1ページ目のみ）
-    if (options.showNews && page === 0) {
-      const newsItems = [
-        document.getElementById('n1').value,
-        document.getElementById('n2').value,
-        document.getElementById('n3').value
-      ].filter(Boolean);
+    // ヘッダー（1ページ目のみ）
+    if (page === 0) {
+      if (options.includeQR && options.qrWithTitle && qrDataURL) {
+        html += '<div class="print-header">';
+        html += `<div class="print-title" style="font-size:${options.titleSize};">${options.title}</div>`;
+        html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+        html += '</div>';
+      } else if (options.includeQR && qrDataURL) {
+        html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+        html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+      } else {
+        html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+      }
       
-      if (newsItems.length > 0) {
-        html += `<div class="print-news">📢 ${newsItems.join(' ／ ')}</div>`;
+      if (options.showNews) {
+        const newsItems = [
+          document.getElementById('n1').value,
+          document.getElementById('n2').value,
+          document.getElementById('n3').value
+        ].filter(Boolean);
+        
+        if (newsItems.length > 0) {
+          html += `<div class="print-news">📢 ${newsItems.join(' ／ ')}</div>`;
+        }
       }
     }
     
@@ -990,7 +1025,7 @@ async function generatePrintHTML(options) {
     if (options.showNote) tableHeader += '<th>備考</th>';
     tableHeader += '</tr>';
     
-    html += `<table class="print-table">`;
+    html += `<table class="print-table" style="font-size:${options.bodyFontSize};">`;
     html += `<thead>${tableHeader}</thead><tbody>`;
     
     pageData.forEach(h => {
@@ -1004,16 +1039,15 @@ async function generatePrintHTML(options) {
     
     html += '</tbody></table>';
     
-    // ページ番号
     if (options.showPageNumbers) {
-      html += `<div class="print-page-num">- ${page + 1}/${totalPages} -</div>`;
+      html += `<div class="print-page-num">- ${page + 1}/${pages.length} -</div>`;
     }
   }
   
   printArea.innerHTML = html;
 }
 
-/* ====== すべてGitHubに保存（CSV + 新着情報） ====== */
+/* ====== すべてGitHubに保存 ====== */
 async function saveAllToGitHub() {
   const token = document.getElementById('githubToken').value;
   if (!token) {
@@ -1031,7 +1065,6 @@ async function saveAllToGitHub() {
   }
   
   try {
-    // 1. CSVを保存
     sortDataAll();
     const csvContent = DATA_ALL.map(h => 
       [h.initial, h.name, h.address, h.note].join(',')
@@ -1040,7 +1073,6 @@ async function saveAllToGitHub() {
     await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel');
     console.log('CSV保存完了');
     
-    // 2. 新着情報をJSONで保存
     const newsData = {
       news1: document.getElementById('n1').value || '',
       news2: document.getElementById('n2').value || '',
@@ -1060,7 +1092,6 @@ async function saveAllToGitHub() {
   }
 }
 
-/* ====== GitHubにファイルを保存 ====== */
 async function saveFileToGitHub(token, path, content, message) {
   const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
   
