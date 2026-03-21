@@ -69,26 +69,129 @@
   .qr-preview img{border:1px solid #ccc;padding:4px;background:#fff;max-width:60px}
   
   /* ====== 印刷用スタイル（PDF出力対応） ====== */
-  @page { size: A4 landscape; margin: 15mm; }
-  @media print {
-    body > *:not(#printArea):not(.print-area) { display: none !important; }
-    body, html { margin: 0; padding: 0; background: white !important; width: 100%; height: auto; }
-    #printArea { display: block !important; position: relative; top: 0; left: 0; width: 100%; background: white !important; font-family: Meiryo, 'メイリオ', sans-serif; color: black !important; visibility: visible !important; opacity: 1 !important; }
-    table.print-table { width: 100%; border-collapse: collapse; page-break-inside: avoid; background: white !important; }
-    table.print-table th, table.print-table td { border: 1px solid black !important; padding: 4px 6px; vertical-align: top; background: white !important; color: black !important; }
-    table.print-table th { background-color: #f0f0f0 !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .print-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; page-break-after: avoid; background: white !important; }
-    .print-title { font-weight: bold; color: black !important; }
-    .print-news { background: #f0f8f0 !important; padding: 8px; margin-bottom: 15px; border: 1px solid #8ab3a0 !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page-break { page-break-after: always; display: block; }
-    .print-page-num { text-align: center; font-size: 8pt; margin-top: 5px; page-break-after: avoid; color: black !important; }
-    thead { display: table-header-group; }
-    tbody { display: table-row-group; }
-    tr { page-break-inside: avoid; }
-    img { max-width: 100%; height: auto; }
+  @page {
+    size: A4 landscape;
+    margin: 15mm;
   }
-  #printArea { display: none; }
+  
+  @media print {
+    /* 印刷時は管理画面を完全非表示 */
+    body > *:not(#printArea):not(.print-area) {
+      display: none !important;
+    }
+    
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: white !important;
+      width: 100%;
+      height: auto;
+    }
+    
+    /* 印刷エリアを表示 */
+    #printArea {
+      display: block !important;
+      position: relative;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: white !important;
+      font-family: Meiryo, 'メイリオ', sans-serif;
+      color: black !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* 印刷テーブルスタイル */
+    table.print-table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: avoid;
+      background: white !important;
+    }
+    
+    table.print-table th,
+    table.print-table td {
+      border: 1px solid black !important;
+      padding: 4px 6px;
+      vertical-align: top;
+      background: white !important;
+      color: black !important;
+    }
+    
+    table.print-table th {
+      background-color: #f0f0f0 !important;
+      font-weight: bold;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* ヘッダー */
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      page-break-after: avoid;
+      background: white !important;
+    }
+    
+    .print-title {
+      font-weight: bold;
+      color: black !important;
+    }
+    
+    .print-news {
+      background: #f0f8f0 !important;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #8ab3a0 !important;
+      color: black !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* 改ページ制御 */
+    .page-break {
+      page-break-after: always;
+      display: block;
+    }
+    
+    /* ページ番号 */
+    .print-page-num {
+      text-align: center;
+      font-size: 8pt;
+      margin-top: 5px;
+      page-break-after: avoid;
+      color: black !important;
+    }
+    
+    /* テーブルヘッダー繰り返し */
+    thead {
+      display: table-header-group;
+    }
+    
+    tbody {
+      display: table-row-group;
+    }
+    
+    tr {
+      page-break-inside: avoid;
+    }
+    
+    /* QRコード画像 */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+  
+  /* 印刷エリア（通常時は非表示） */
+  #printArea {
+    display: none;
+  }
 </style>
+<!-- QRコード生成ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
@@ -98,8 +201,11 @@
     <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
     <div class="row"><label>2</label><input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）"></div>
     <div class="row"><label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）"></div>
-    <div class="right"><button class="btn" onclick="previewWithNews()">🔍 プレビュー（URL生成）</button></div>
-    <div class="hint">※ 「プレビュー」でトップページを確認（GitHub保存は下部の「すべてGitHubに保存」で実行）</div>
+    <div class="right">
+      <button class="btn" onclick="previewWithNews()">🔍 プレビュー（URL生成）</button>
+      <button class="btn btn-primary" onclick="saveNewsToJSON()" style="margin-left:8px;">💾 新着情報を保存</button>
+    </div>
+    <div class="hint">※ 「プレビュー」でトップページを確認、「保存」で新着情報をGitHubに保存します。</div>
   </div>
 
   <!-- ホテル編集パネル -->
@@ -120,6 +226,7 @@
       <button class="btn-a" data-g="UVWX">UVWX</button>
       <button class="btn-a" data-g="YZ">YZ</button>
     </div>
+
     <div id="card" class="card">
       <div class="row">
         <label>頭文字</label><input id="fInitial" type="text" placeholder="あ / A">
@@ -167,7 +274,7 @@
       </div>
       <a class="btn" href="index.html">🏠 トップへ戻る</a>
     </div>
-    <div class="hint">※ 「すべてGitHubに保存」でCSVと新着情報が同時にGitHubに保存されます。</div>
+    <div class="hint">※ CSVインポート後は自動で全件置換 → 名前順に整列。GitHub保存でCSVと新着情報が同時更新。</div>
   </div>
 
   <!-- 印刷設定＆全ページプレビューモーダル -->
@@ -177,46 +284,98 @@
         <h3>🖨️ 印刷設定 & 全ページプレビュー（A4横）</h3>
         <span class="modal-close" onclick="closePrintModal()">&times;</span>
       </div>
+      
       <div class="modal-body">
+        <!-- 印刷設定パネル -->
         <div class="print-settings">
           <div class="setting-group">
             <h4>📌 表題</h4>
-            <div class="setting-row"><input type="text" id="printTitle" value="札幌ホテルリスト" style="width:100%; padding:4px;"></div>
-            <div class="setting-row"><span>サイズ:</span><select id="titleFontSize"><option value="14pt">小</option><option value="18pt" selected>中</option><option value="22pt">大</option><option value="26pt">特大</option></select></div>
+            <div class="setting-row">
+              <input type="text" id="printTitle" value="札幌ホテルリスト" style="width:100%; padding:4px;">
+            </div>
+            <div class="setting-row">
+              <span style="min-width:70px;">サイズ:</span>
+              <select id="titleFontSize" style="flex:1;">
+                <option value="14pt">小 (14pt)</option>
+                <option value="18pt" selected>中 (18pt)</option>
+                <option value="22pt">大 (22pt)</option>
+                <option value="26pt">特大 (26pt)</option>
+              </select>
+            </div>
           </div>
+
           <div class="setting-group">
             <h4>📱 QRコード</h4>
-            <div class="setting-row"><label><input type="checkbox" id="includeQR" checked> 含める</label><label><input type="checkbox" id="qrWithTitle" checked> 表題と同じ行</label></div>
-            <div class="setting-row"><span>サイズ:</span><select id="qrSize"><option value="60">小</option><option value="80" selected>中</option><option value="100">大</option></select></div>
-            <div id="qrPreview" class="qr-preview" style="display:none;"><img id="qrPreviewImg" src="" alt="QRコード"></div>
+            <div class="setting-row">
+              <label><input type="checkbox" id="includeQR" checked> 含める</label>
+              <label><input type="checkbox" id="qrWithTitle" checked> 表題と同じ行</label>
+            </div>
+            <div class="setting-row">
+              <span>サイズ:</span>
+              <select id="qrSize" style="flex:1;">
+                <option value="60">小 (60px)</option>
+                <option value="80" selected>中 (80px)</option>
+                <option value="100">大 (100px)</option>
+              </select>
+            </div>
+            <div id="qrPreview" class="qr-preview" style="display:none;">
+              <img id="qrPreviewImg" src="" alt="QRコード">
+            </div>
           </div>
+
           <div class="setting-group">
             <h4>📋 表示項目</h4>
-            <div><label><input type="checkbox" id="printInitial" checked> 頭文字</label><label><input type="checkbox" id="printName" checked> ホテル名</label></div>
-            <div><label><input type="checkbox" id="printAddress" checked> 住所</label><label><input type="checkbox" id="printNote" checked> 備考</label></div>
-            <div><label><input type="checkbox" id="printNews" checked> 新着情報</label><label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label></div>
+            <div style="display:grid; grid-template-columns:repeat(2,1fr);">
+              <label><input type="checkbox" id="printInitial" checked> 頭文字</label>
+              <label><input type="checkbox" id="printName" checked> ホテル名</label>
+              <label><input type="checkbox" id="printAddress" checked> 住所</label>
+              <label><input type="checkbox" id="printNote" checked> 備考</label>
+              <label><input type="checkbox" id="printNews" checked> 新着情報</label>
+              <label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label>
+            </div>
           </div>
+
           <div class="setting-group">
             <h4>📐 レイアウト</h4>
-            <div class="setting-row"><span>目標行数/頁:</span><input type="number" id="rowsPerPage" value="40" min="10" max="100" style="width:70px;"></div>
-            <div class="setting-row"><span>本文:</span><select id="bodyFontSize"><option value="8pt">小</option><option value="10pt" selected>中</option><option value="12pt">大</option></select></div>
+            <div class="setting-row">
+              <span>行数/頁:</span>
+              <input type="number" id="rowsPerPage" value="40" min="10" max="100" style="width:60px;">
+            </div>
+            <div class="setting-row">
+              <span>本文:</span>
+              <select id="bodyFontSize" style="flex:1;">
+                <option value="8pt">小 (8pt)</option>
+                <option value="10pt" selected>中 (10pt)</option>
+                <option value="12pt">大 (12pt)</option>
+              </select>
+            </div>
           </div>
         </div>
+
+        <!-- 全ページプレビューエリア -->
         <div class="preview-container">
-          <div class="preview-header"><span>🔍 全ページプレビュー</span><button onclick="refreshFullPreview()">🔄 更新</button></div>
-          <div id="fullPreviewArea" class="preview-area"><div style="padding:20px;text-align:center;">プレビューを読み込み中...</div></div>
+          <div class="preview-header">
+            <span>🔍 全ページプレビュー（全${Math.ceil(DATA_ALL.length/40)}ページ）</span>
+            <button onclick="refreshFullPreview()">🔄 更新</button>
+          </div>
+          <div id="fullPreviewArea" class="preview-area">
+            <!-- ここに全ページの印刷プレビューを表示 -->
+          </div>
         </div>
       </div>
+
       <div class="modal-footer">
         <button class="btn" onclick="closePrintModal()">キャンセル</button>
         <button class="btn btn-primary" onclick="executePrint()">🖨️ PDF/印刷実行</button>
       </div>
     </div>
   </div>
+
+  <!-- 印刷用エリア（PDF出力用） -->
   <div id="printArea"></div>
 
 <script>
-/* ====== 設定 ====== */
+/* ====== 設定：あなたのリポジトリ情報 ====== */
 const GH_OWNER = "mjmu-web";
 const GH_REPO  = "sapporo_hotel_list";
 const CSV_PATH = "data/hotels.csv";
@@ -227,241 +386,12 @@ let DATA_ALL = [];
 let VIEW = [];
 let viewIndex = 0;
 let currentGroup = null;
-let previewTimeout = null;<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>管理（札幌ホテルリスト）</title>
-<style>
-  /* ====== 基本スタイル ====== */
-  body{font-family:Meiryo,'メイリオ',sans-serif;background:linear-gradient(145deg,#c0c0c0,#e0e0e0);margin:0;padding:14px;color:#222}
-  .section-title{font-size:20px;margin:10px 0 6px;text-align:center;font-weight:bold}
-  .panel{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:10px auto;max-width:1100px}
-  .panel:first-of-type{background:#e0f0e8;border:2px solid #8ab3a0}
-  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .row input[type="text"],.row textarea{flex:1;padding:8px;border:1px solid #bbb;border-radius:6px;font-size:16px}
-  .row label{min-width:72px}
-  .btn{padding:10px 14px;border-radius:10px;border:2px solid #777;background:linear-gradient(#fff,#ccc);font-weight:700;cursor:pointer;display:inline-block;text-decoration:none;color:#222}
-  .btn-danger{border-color:#b44;background:linear-gradient(#fff,#f3c0c0)}
-  .btn-primary{border-color:#357;background:linear-gradient(#fff,#cfe0ff)}
-  .btn-success{border-color:#274;background:linear-gradient(#fff,#cfc)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .grid-kana{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
-  .grid-alpha{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
-  .btn-k{padding:8px 0;border-radius:9999px;border:1px solid #999;background:linear-gradient(#fff,#ddd);font-weight:700;cursor:pointer}
-  .btn-a{padding:8px 0;border-radius:9999px;border:1px solid #999;background:linear-gradient(#fff,#ddd);font-weight:700;cursor:pointer}
-  .card{background:#fafafa;border:1px solid #ddd;border-radius:10px;padding:10px;margin-top:8px}
-  .hint{font-size:12px;color:#555}
-  .separator{height:1px;background:linear-gradient(90deg,transparent,#ccc,transparent);margin:10px 0}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
-  .mini{padding:8px 10px}
-  .right{display:flex;justify-content:flex-end}
-  .nowrap{white-space:nowrap}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
-  .new-hotel-panel{background:#e8f0fe;border:2px solid #6c8ebf;border-radius:10px;padding:12px;margin-top:15px}
-  
-  /* ====== モーダル ====== */
-  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
-  .modal-content{background:#fff;border-radius:12px;max-width:1200px;width:95%;margin:20px auto;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-height:90vh;display:flex;flex-direction:column}
-  .modal-header{border-bottom:2px solid #357;padding-bottom:8px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center}
-  .modal-header h3{margin:0;font-size:22px}
-  .modal-body{flex:1;overflow-y:auto;padding:10px 0;min-height:400px}
-  .modal-footer{border-top:1px solid #ddd;padding-top:15px;margin-top:15px;display:flex;gap:10px;justify-content:flex-end}
-  .modal-close{font-size:28px;cursor:pointer;padding:0 10px}
-  .modal-close:hover{color:#f00}
-  
-  /* ====== 印刷設定パネル ====== */
-  .print-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-bottom:20px;background:#f5f5f5;padding:15px;border-radius:8px}
-  .setting-group h4{margin:0 0 10px 0;color:#357;font-size:14px}
-  .setting-row{margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}
-  .setting-row input[type="checkbox"]{margin-right:2px}
-  
-  /* ====== プレビューエリア ====== */
-  .preview-container{border:2px solid #357;border-radius:8px;overflow:hidden;background:#fff;height:500px;display:flex;flex-direction:column}
-  .preview-header{background:#357;color:#fff;padding:8px 12px;font-weight:bold;display:flex;justify-content:space-between}
-  .preview-header button{background:#fff;color:#357;border:none;padding:4px 12px;border-radius:4px;cursor:pointer}
-  .preview-area{flex:1;overflow:auto;padding:15px;background:#fff;font-size:14px}
-  
-  /* ====== 印刷プレビュー用スタイル ====== */
-  .print-preview-page{background:#fff;margin-bottom:20px;border:1px dashed #357;padding:10px}
-  .print-preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #333}
-  .print-preview-title{font-weight:bold}
-  .print-preview-table{width:100%;border-collapse:collapse;margin-bottom:5px}
-  .print-preview-table th,.print-preview-table td{border:1px solid #000;padding:4px 6px;text-align:left;font-size:10pt}
-  .print-preview-table th{background:#f0f0f0}
-  .print-preview-news{background:#f0f8f0;padding:6px;margin-bottom:10px;border:1px solid #8ab3a0;font-size:10pt}
-  .print-preview-page-num{text-align:center;font-size:8pt;margin-top:5px;color:#666}
-  
-  /* ====== QRコードプレビュー ====== */
-  .qr-preview{text-align:center;margin-top:5px}
-  .qr-preview img{border:1px solid #ccc;padding:4px;background:#fff;max-width:60px}
-  
-  /* ====== 印刷用スタイル（PDF出力対応） ====== */
-  @page { size: A4 landscape; margin: 15mm; }
-  @media print {
-    body > *:not(#printArea):not(.print-area) { display: none !important; }
-    body, html { margin: 0; padding: 0; background: white !important; width: 100%; height: auto; }
-    #printArea { display: block !important; position: relative; top: 0; left: 0; width: 100%; background: white !important; font-family: Meiryo, 'メイリオ', sans-serif; color: black !important; visibility: visible !important; opacity: 1 !important; }
-    table.print-table { width: 100%; border-collapse: collapse; page-break-inside: avoid; background: white !important; }
-    table.print-table th, table.print-table td { border: 1px solid black !important; padding: 4px 6px; vertical-align: top; background: white !important; color: black !important; }
-    table.print-table th { background-color: #f0f0f0 !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .print-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; page-break-after: avoid; background: white !important; }
-    .print-title { font-weight: bold; color: black !important; }
-    .print-news { background: #f0f8f0 !important; padding: 8px; margin-bottom: 15px; border: 1px solid #8ab3a0 !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .page-break { page-break-after: always; display: block; }
-    .print-page-num { text-align: center; font-size: 8pt; margin-top: 5px; page-break-after: avoid; color: black !important; }
-    thead { display: table-header-group; }
-    tbody { display: table-row-group; }
-    tr { page-break-inside: avoid; }
-    img { max-width: 100%; height: auto; }
-  }
-  #printArea { display: none; }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-</head>
-<body>
-  <!-- 新着情報パネル -->
-  <div class="panel no-print">
-    <h2 class="section-title">新着情報</h2>
-    <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
-    <div class="row"><label>2</label><input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）"></div>
-    <div class="row"><label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）"></div>
-    <div class="right"><button class="btn" onclick="previewWithNews()">🔍 プレビュー（URL生成）</button></div>
-    <div class="hint">※ 「プレビュー」でトップページを確認（GitHub保存は下部の「すべてGitHubに保存」で実行）</div>
-  </div>
 
-  <!-- ホテル編集パネル -->
-  <div class="panel no-print">
-    <h2 class="section-title">ホテル編集（既存データ）</h2>
-    <div class="grid-kana">
-      <button class="btn-k" data-g="あ">あ</button><button class="btn-k" data-g="か">か</button>
-      <button class="btn-k" data-g="さ">さ</button><button class="btn-k" data-g="た">た</button>
-      <button class="btn-k" data-g="な">な</button><button class="btn-k" data-g="は">は</button>
-      <button class="btn-k" data-g="ま">ま</button><button class="btn-k" data-g="や">や</button>
-      <button class="btn-k" data-g="ら">ら</button><button class="btn-k" data-g="わ">わ</button>
-    </div>
-    <div class="grid-alpha">
-      <button class="btn-a" data-g="ABCDE">ABCDE</button>
-      <button class="btn-a" data-g="FGHIJ">FGHIJ</button>
-      <button class="btn-a" data-g="KLMNO">KLMNO</button>
-      <button class="btn-a" data-g="PQRST">PQRST</button>
-      <button class="btn-a" data-g="UVWX">UVWX</button>
-      <button class="btn-a" data-g="YZ">YZ</button>
-    </div>
-    <div id="card" class="card">
-      <div class="row">
-        <label>頭文字</label><input id="fInitial" type="text" placeholder="あ / A">
-        <label>ホテル名</label><input id="fName" type="text" placeholder="ホテル◯◯">
-      </div>
-      <div class="row"><label>住所</label><input id="fAddress" type="text" placeholder="札幌市◯◯区…"></div>
-      <div class="row"><label>備考</label><textarea id="fNote" rows="3" placeholder="例：南2条通北側、駅近、旧名称あり など"></textarea></div>
-      <div class="separator"></div>
-      <div class="controls">
-        <button class="btn mini" id="btnPrev">◀ 前へ</button>
-        <span class="nowrap">（<span id="pos">0</span>/<span id="len">0</span>）</span>
-        <button class="btn mini" id="btnNext">▶ 次へ</button>
-        <input id="jumpHead" class="mono" type="text" placeholder="ホテル名で検索" style="min-width:180px">
-        <button class="btn mini" id="btnSearch">🔍 検索</button>
-        <button class="btn mini btn-primary" id="btnSave">💾 保存</button>
-        <button class="btn mini btn-danger" id="btnDelete">🗑 削除</button>
-      </div>
-      <div class="hint">※ 五十音／英字ボタンでグループを絞れます。編集後は「保存」ボタンで更新。</div>
-    </div>
-  </div>
-
-  <!-- 新規ホテル登録 -->
-  <div class="panel no-print new-hotel-panel">
-    <h2 class="section-title">📝 新規ホテル登録（名前順に自動挿入）</h2>
-    <div class="row">
-      <label>頭文字</label><input id="newInitial" type="text" placeholder="あ / A">
-      <label>ホテル名</label><input id="newName" type="text" placeholder="ホテル名（必須）">
-    </div>
-    <div class="row"><label>住所</label><input id="newAddress" type="text" placeholder="札幌市…"></div>
-    <div class="row"><label>備考</label><textarea id="newNote" rows="2" placeholder="備考"></textarea></div>
-    <div class="controls"><button class="btn btn-success" id="btnNewAdd">✨ 新規追加（自動整列）</button></div>
-    <div class="hint">入力後「新規追加」で、ホテル名の五十音順に自動的に挿入されます。</div>
-  </div>
-
-  <!-- 管理ツール -->
-  <div class="panel no-print">
-    <h2 class="section-title">管理ツール</h2>
-    <div class="controls">
-      <button class="btn" onclick="openPrintModal()">🖨️ 印刷設定＆全ページプレビュー</button>
-      <label class="btn" for="csvFile">📤 CSVインポート</label><input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
-      <button class="btn" onclick="downloadExcel()">📥 CSVでダウンロード</button>
-      <div style="display:flex; gap:8px; margin-left:10px; align-items:center;">
-        <input type="password" id="githubToken" placeholder="GitHubトークン（変更時のみ）" style="padding:8px; border-radius:6px; border:1px solid #bbb; width:250px;">
-        <button class="btn btn-primary" onclick="saveAllToGitHub()">🚀 すべてGitHubに保存</button>
-      </div>
-      <a class="btn" href="index.html">🏠 トップへ戻る</a>
-    </div>
-    <div class="hint">※ 「すべてGitHubに保存」でCSVと新着情報が同時にGitHubに保存されます。</div>
-  </div>
-
-  <!-- 印刷設定＆全ページプレビューモーダル -->
-  <div id="printModal" class="modal no-print">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🖨️ 印刷設定 & 全ページプレビュー（A4横）</h3>
-        <span class="modal-close" onclick="closePrintModal()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="print-settings">
-          <div class="setting-group">
-            <h4>📌 表題</h4>
-            <div class="setting-row"><input type="text" id="printTitle" value="札幌ホテルリスト" style="width:100%; padding:4px;"></div>
-            <div class="setting-row"><span>サイズ:</span><select id="titleFontSize"><option value="14pt">小</option><option value="18pt" selected>中</option><option value="22pt">大</option><option value="26pt">特大</option></select></div>
-          </div>
-          <div class="setting-group">
-            <h4>📱 QRコード</h4>
-            <div class="setting-row"><label><input type="checkbox" id="includeQR" checked> 含める</label><label><input type="checkbox" id="qrWithTitle" checked> 表題と同じ行</label></div>
-            <div class="setting-row"><span>サイズ:</span><select id="qrSize"><option value="60">小</option><option value="80" selected>中</option><option value="100">大</option></select></div>
-            <div id="qrPreview" class="qr-preview" style="display:none;"><img id="qrPreviewImg" src="" alt="QRコード"></div>
-          </div>
-          <div class="setting-group">
-            <h4>📋 表示項目</h4>
-            <div><label><input type="checkbox" id="printInitial" checked> 頭文字</label><label><input type="checkbox" id="printName" checked> ホテル名</label></div>
-            <div><label><input type="checkbox" id="printAddress" checked> 住所</label><label><input type="checkbox" id="printNote" checked> 備考</label></div>
-            <div><label><input type="checkbox" id="printNews" checked> 新着情報</label><label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label></div>
-          </div>
-          <div class="setting-group">
-            <h4>📐 レイアウト</h4>
-            <div class="setting-row"><span>目標行数/頁:</span><input type="number" id="rowsPerPage" value="40" min="10" max="100" style="width:70px;"></div>
-            <div class="setting-row"><span>本文:</span><select id="bodyFontSize"><option value="8pt">小</option><option value="10pt" selected>中</option><option value="12pt">大</option></select></div>
-          </div>
-        </div>
-        <div class="preview-container">
-          <div class="preview-header"><span>🔍 全ページプレビュー</span><button onclick="refreshFullPreview()">🔄 更新</button></div>
-          <div id="fullPreviewArea" class="preview-area"><div style="padding:20px;text-align:center;">プレビューを読み込み中...</div></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closePrintModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="executePrint()">🖨️ PDF/印刷実行</button>
-      </div>
-    </div>
-  </div>
-  <div id="printArea"></div>
-
-<script>
-/* ====== 設定 ====== */
-const GH_OWNER = "mjmu-web";
-const GH_REPO  = "sapporo_hotel_list";
-const CSV_PATH = "data/hotels.csv";
-const NEWS_PATH = "data/news.json";
-
-/* ====== 状態 ====== */
-let DATA_ALL = [];
-let VIEW = [];
-let viewIndex = 0;
-let currentGroup = null;
-let previewTimeout = null;
 /* ====== ルール ====== */
 const KANA_RANGES = {
   'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/,
   'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
-  'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/,
+  'さ': /[さしすせそサシスセソ]/,
   'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/,
   'な': /[なにぬねのナニヌネノ]/,
   'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/,
@@ -470,14 +400,27 @@ const KANA_RANGES = {
   'ら': /[らりるれろラリルレロ]/,
   'わ': /[わをんワヲン]/
 };
-const ALPHA_GROUPS = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
+const ALPHA_GROUPS = {
+  'ABCDE': 'ABCDE',
+  'FGHIJ': 'FGHIJ',
+  'KLMNO': 'KLMNO',
+  'PQRST': 'PQRST',
+  'UVWX': 'UVWX',
+  'YZ': 'YZ'
+};
 
 /* ====== 起動 ====== */
 init();
 async function init() {
   await loadCSV();
   sortDataAll();
-  try { await loadNewsFromJSON(); } catch(e) { console.log('JSON読み込みエラー:', e); }
+  
+  try {
+    await loadNewsFromJSON();
+  } catch (e) {
+    console.log('JSON読み込みエラー:', e);
+  }
+  
   loadNewsFromURL();
   bindUI();
   VIEW = DATA_ALL.slice();
@@ -486,6 +429,7 @@ async function init() {
   updateForm();
 }
 
+/* ====== URLから新着情報を読み込み ====== */
 function loadNewsFromURL() {
   const params = new URLSearchParams(location.search);
   if (params.get('news1') !== null) {
@@ -495,57 +439,127 @@ function loadNewsFromURL() {
   }
 }
 
+/* ====== news.jsonから新着情報を読み込む ====== */
 async function loadNewsFromJSON() {
   try {
-    const r = await fetch(NEWS_PATH + '?t=' + Date.now(), { cache: 'no-store' });
-    if (!r.ok) { if (r.status === 404) return; throw new Error(`HTTP ${r.status}`); }
+    const r = await fetch(NEWS_PATH + '?t=' + Date.now(), {
+      cache: 'no-store',
+      headers: {'Pragma': 'no-cache','Cache-Control': 'no-cache'}
+    });
+    
+    if (!r.ok) {
+      if (r.status === 404) {
+        console.log('news.jsonはまだ存在しません');
+        return;
+      }
+      throw new Error(`HTTP ${r.status}`);
+    }
+    
     const news = await r.json();
     document.getElementById('n1').value = news.news1 || '';
     document.getElementById('n2').value = news.news2 || '';
     document.getElementById('n3').value = news.news3 || '';
-  } catch(e) { console.log('新着情報の読み込みに失敗:', e); }
+    
+  } catch (e) {
+    console.log('新着情報の読み込みに失敗:', e);
+  }
 }
 
+/* ====== 新着情報をJSONとして保存 ====== */
+async function saveNewsToJSON() {
+  const token = document.getElementById('githubToken').value;
+  if (!token) {
+    alert('GitHubトークンを入力してください');
+    return;
+  }
+  
+  const newsData = {
+    news1: document.getElementById('n1').value || '',
+    news2: document.getElementById('n2').value || '',
+    news3: document.getElementById('n3').value || '',
+    updated: new Date().toISOString()
+  };
+  
+  try {
+    await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel');
+    alert('✅ 新着情報を保存しました');
+  } catch (e) {
+    alert('❌ 保存に失敗しました: ' + e.message);
+  }
+}
+
+/* ====== プレビュー（URL生成） ====== */
 function previewWithNews() {
-  const n1 = document.getElementById('n1').value;
-  const n2 = document.getElementById('n2').value;
-  const n3 = document.getElementById('n3').value;
+  const n1 = encodeURIComponent(document.getElementById('n1').value || '');
+  const n2 = encodeURIComponent(document.getElementById('n2').value || '');
+  const n3 = encodeURIComponent(document.getElementById('n3').value || '');
+  
   const params = new URLSearchParams();
-  if (n1 && n1.trim() !== '') params.set('news1', n1);
-  if (n2 && n2.trim() !== '') params.set('news2', n2);
-  if (n3 && n3.trim() !== '') params.set('news3', n3);
+  if (n1) params.set('news1', n1);
+  if (n2) params.set('news2', n2);
+  if (n3) params.set('news3', n3);
+  
   const queryString = params.toString();
-  const baseUrl = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html');
-  window.open(queryString ? baseUrl + '?' + queryString : baseUrl, '_blank');
+  const url = 'index.html' + (queryString ? '?' + queryString : '');
+  
+  window.open(url, '_blank');
 }
 
+/* ====== CSV読込 ====== */
 async function loadCSV() {
   try {
     const r = await fetch(CSV_PATH + '?t=' + Date.now(), { cache: 'no-store' });
     const t = await r.text();
     const lines = t.trim().split(/\r?\n/).filter(Boolean);
+    
     let startLine = 0;
     const firstLine = lines[0] || '';
-    if (firstLine.includes('頭文字') || firstLine.includes('initial')) startLine = 1;
+    if (firstLine.includes('頭文字') || firstLine.includes('initial')) {
+      startLine = 1;
+    }
+    
     const dataLines = lines.slice(startLine);
+    
     DATA_ALL = dataLines.map(l => {
       const p = l.split(',');
-      return { initial: p[0] || '', name: p[1] || '', address: p[2] || '', note: p[3] || '' };
+      return { 
+        initial: p[0] || '', 
+        name: p[1] || '', 
+        address: p[2] || '', 
+        note: p[3] || ''
+      };
     });
     console.log('読み込み完了:', DATA_ALL.length, '件');
-  } catch(e) { alert('CSVの読み込みに失敗: ' + e.message); DATA_ALL = []; }
+  } catch (e) {
+    alert('CSVの読み込みに失敗: ' + e.message);
+    DATA_ALL = [];
+  }
 }
 
-function sortDataAll() { DATA_ALL.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ja')); }
+/* ====== 並べ替え ====== */
+function sortDataAll() {
+  DATA_ALL.sort((a, b) => 
+    (a.name || '').localeCompare((b.name || ''), 'ja')
+  );
+}
 
+/* ====== データ変更後の共通処理 ====== */
 function refreshAfterDataChange() {
   sortDataAll();
-  if (currentGroup) { applyGroup(currentGroup); }
-  else { VIEW = DATA_ALL.slice(); viewIndex = Math.min(viewIndex, VIEW.length - 1); if (viewIndex < 0) viewIndex = 0; updateForm(); }
+  if (currentGroup) {
+    applyGroup(currentGroup);
+  } else {
+    VIEW = DATA_ALL.slice();
+    viewIndex = Math.min(viewIndex, VIEW.length - 1);
+    if (viewIndex < 0) viewIndex = 0;
+    updateForm();
+  }
 }
 
+/* ====== UIバインド ====== */
 function bindUI() {
   window.previewWithNews = previewWithNews;
+  window.saveNewsToJSON = saveNewsToJSON;
   window.downloadExcel = downloadExcel;
   window.saveAllToGitHub = saveAllToGitHub;
   window.openPrintModal = openPrintModal;
@@ -553,7 +567,10 @@ function bindUI() {
   window.refreshFullPreview = refreshFullPreview;
   window.executePrint = executePrint;
   
-  document.querySelectorAll('[data-g]').forEach(b => { b.addEventListener('click', () => applyGroup(b.getAttribute('data-g'))); });
+  document.querySelectorAll('[data-g]').forEach(b => {
+    b.addEventListener('click', () => applyGroup(b.getAttribute('data-g')));
+  });
+
   document.getElementById('btnPrev').addEventListener('click', () => move(-1));
   document.getElementById('btnNext').addEventListener('click', () => move(1));
   document.getElementById('btnSave').addEventListener('click', saveCurrentEdit);
@@ -562,72 +579,103 @@ function bindUI() {
   document.getElementById('csvFile').addEventListener('change', onImportCSV);
   document.getElementById('btnNewAdd').addEventListener('click', addNewHotel);
   
-  document.getElementById('includeQR').addEventListener('change', () => { updateQRPreview(); schedulePreviewUpdate(); });
-  document.getElementById('qrSize').addEventListener('change', () => { updateQRPreview(); schedulePreviewUpdate(); });
+  document.getElementById('includeQR').addEventListener('change', updateQRPreview);
+  document.getElementById('qrSize').addEventListener('change', updateQRPreview);
   
+  // 設定変更時にプレビュー更新
   const previewTriggers = ['printTitle', 'titleFontSize', 'includeQR', 'qrWithTitle', 'qrSize', 
-   'printInitial', 'printName', 'printAddress', 'printNote', 'printNews', 'printPageNumbers', 'rowsPerPage', 'bodyFontSize'];
+   'printInitial', 'printName', 'printAddress', 'printNote', 'printNews', 
+   'printPageNumbers', 'rowsPerPage', 'bodyFontSize'];
+  
   previewTriggers.forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.addEventListener('change', () => schedulePreviewUpdate()); if (el.type === 'text' || el.type === 'number') { el.addEventListener('input', () => schedulePreviewUpdate()); } }
+    if (el) {
+      el.addEventListener('change', () => setTimeout(refreshFullPreview, 50));
+      if (el.type === 'text' || el.type === 'number') {
+        el.addEventListener('input', () => setTimeout(refreshFullPreview, 50));
+      }
+    }
   });
 }
 
-function schedulePreviewUpdate() {
-  if (previewTimeout) clearTimeout(previewTimeout);
-  previewTimeout = setTimeout(() => { if (document.getElementById('printModal').style.display === 'flex') { refreshFullPreview(); } }, 300);
-}
-
+/* ====== グループ適用 ====== */
 function applyGroup(g) {
   currentGroup = g;
   if (KANA_RANGES[g]) {
-    VIEW = DATA_ALL.filter(h => { const head = (h.name || '').replace(/^ホテル\s*/,'').trim().charAt(0); return KANA_RANGES[g].test(head); });
+    VIEW = DATA_ALL.filter(h => {
+      const head = (h.name || '').replace(/^ホテル\s*/,'').trim().charAt(0);
+      return KANA_RANGES[g].test(head);
+    });
   } else {
     const set = (ALPHA_GROUPS[g] || '');
-    VIEW = DATA_ALL.filter(h => { const head = ((h.name || '').replace(/^ホテル\s*/,'').trim().charAt(0) || '').toUpperCase(); return set.includes(head); });
+    VIEW = DATA_ALL.filter(h => {
+      const head = ((h.name || '').replace(/^ホテル\s*/,'').trim().charAt(0) || '').toUpperCase();
+      return set.includes(head);
+    });
   }
   VIEW.sort((a, b) => (a.name || '').localeCompare((b.name || ''), 'ja'));
   viewIndex = 0;
   updateForm();
 }
 
+/* ====== フォーム更新 ====== */
 function updateForm() {
   const h = VIEW[viewIndex] || {};
   document.getElementById('fInitial').value = h.initial || '';
   document.getElementById('fName').value = h.name || '';
   document.getElementById('fAddress').value = h.address || '';
   document.getElementById('fNote').value = h.note || '';
+  
   document.getElementById('pos').textContent = (VIEW.length > 0 ? viewIndex + 1 : 0);
   document.getElementById('len').textContent = VIEW.length;
+  
   document.getElementById('btnPrev').disabled = (viewIndex <= 0);
   document.getElementById('btnNext').disabled = (viewIndex >= VIEW.length - 1);
   document.getElementById('btnDelete').disabled = (VIEW.length === 0);
 }
 
-function move(delta) { viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta)); updateForm(); }
+function move(delta) {
+  viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta));
+  updateForm();
+}
 
 function searchByName() {
   const query = document.getElementById('jumpHead').value.toLowerCase().trim();
   if (!query) return;
-  for (let i = 0; i < VIEW.length; i++) { if ((VIEW[i].name || '').toLowerCase().includes(query)) { viewIndex = i; updateForm(); return; } }
+  for (let i = 0; i < VIEW.length; i++) {
+    if ((VIEW[i].name || '').toLowerCase().includes(query)) {
+      viewIndex = i;
+      updateForm();
+      return;
+    }
+  }
   alert('該当なし');
 }
 
+/* ====== 保存 ====== */
 function saveCurrentEdit() {
   if (VIEW.length === 0) return;
   const currentHotel = VIEW[viewIndex];
+
   currentHotel.initial = document.getElementById('fInitial').value.trim();
   currentHotel.name = document.getElementById('fName').value.trim();
   currentHotel.address = document.getElementById('fAddress').value.trim();
   currentHotel.note = document.getElementById('fNote').value.trim();
-  if (!currentHotel.name) { alert('ホテル名は必須です'); return; }
+
+  if (!currentHotel.name) {
+    alert('ホテル名は必須です');
+    return;
+  }
+
   refreshAfterDataChange();
+
   const newIndex = VIEW.findIndex(h => h === currentHotel);
   viewIndex = newIndex !== -1 ? newIndex : 0;
   updateForm();
   alert('保存しました');
 }
 
+/* ====== 新規追加 ====== */
 function addNewHotel() {
   const newHotel = {
     initial: document.getElementById('newInitial').value.trim(),
@@ -635,19 +683,25 @@ function addNewHotel() {
     address: document.getElementById('newAddress').value.trim(),
     note: document.getElementById('newNote').value.trim()
   };
-  if (!newHotel.name) { alert('ホテル名は必須'); return; }
+  if (!newHotel.name) {
+    alert('ホテル名は必須');
+    return;
+  }
   DATA_ALL.push(newHotel);
   refreshAfterDataChange();
+
   document.getElementById('newInitial').value = '';
   document.getElementById('newName').value = '';
   document.getElementById('newAddress').value = '';
   document.getElementById('newNote').value = '';
+
   viewIndex = VIEW.findIndex(h => h.name === newHotel.name && h.address === newHotel.address);
   if (viewIndex === -1) viewIndex = 0;
   updateForm();
   alert('新規ホテルを正しい順序に追加しました');
 }
 
+/* ====== 削除 ====== */
 function delCurrent() {
   if (!confirm('本当に削除しますか？')) return;
   const hotelToDelete = VIEW[viewIndex];
@@ -656,6 +710,7 @@ function delCurrent() {
   alert('削除しました');
 }
 
+/* ====== CSVダウンロード ====== */
 function downloadCSV(content, filename) {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -668,6 +723,7 @@ function downloadCSV(content, filename) {
   document.body.removeChild(link);
 }
 
+/* ====== CSVインポート ====== */
 function onImportCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -675,7 +731,15 @@ function onImportCSV(event) {
   reader.onload = function(e) {
     const content = e.target.result;
     const lines = content.split(/\r?\n/).filter(Boolean);
-    DATA_ALL = lines.map(line => { const parts = line.split(','); return { initial: parts[0] || '', name: parts[1] || '', address: parts[2] || '', note: parts[3] || '' }; });
+    DATA_ALL = lines.map(line => {
+      const parts = line.split(',');
+      return {
+        initial: parts[0] || '',
+        name: parts[1] || '',
+        address: parts[2] || '',
+        note: parts[3] || ''
+      };
+    });
     refreshAfterDataChange();
     alert(`CSVをインポート（${DATA_ALL.length}件）・名前順に整列済み`);
   };
@@ -685,63 +749,51 @@ function onImportCSV(event) {
 
 function downloadExcel() {
   sortDataAll();
-  const csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n');
+  const csvContent = DATA_ALL.map(h => 
+    [h.initial, h.name, h.address, h.note].join(',')
+  ).join('\n');
   downloadCSV(csvContent, 'hotels_export.csv');
 }
 
 /* ====== 印刷モーダル関連 ====== */
-async function openPrintModal() {
+function openPrintModal() {
   document.getElementById('printModal').style.display = 'flex';
-  const includeQR = document.getElementById('includeQR').checked;
-  document.getElementById('qrPreview').style.display = includeQR ? 'block' : 'none';
-  if (includeQR && typeof QRCode !== 'undefined') {
-    await updateQRPreview();
+  if (typeof QRCode !== 'undefined') {
+    setTimeout(updateQRPreview, 100);
   }
-  await refreshFullPreview();
+  setTimeout(refreshFullPreview, 200);
 }
 
-function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
+function closePrintModal() {
+  document.getElementById('printModal').style.display = 'none';
+}
 
-async function updateQRPreview() {
+function updateQRPreview() {
   const includeQR = document.getElementById('includeQR').checked;
   const qrPreview = document.getElementById('qrPreview');
-  const qrSize = parseInt(document.getElementById('qrSize').value);
+  const qrSize = document.getElementById('qrSize').value;
   
-  if (includeQR && typeof QRCode !== 'undefined') {
+  if (includeQR) {
     qrPreview.style.display = 'block';
     const url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html');
-    try {
-      const canvas = await QRCode.toCanvas(url, { width: qrSize, margin: 1 });
-      document.getElementById('qrPreviewImg').src = canvas.toDataURL();
-    } catch(err) { console.error('QRコード生成エラー:', err); }
+    
+    QRCode.toDataURL(url, {
+      width: parseInt(qrSize),
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' }
+    }, function(err, url) {
+      if (!err) {
+        document.getElementById('qrPreviewImg').src = url;
+        refreshFullPreview();
+      }
+    });
   } else {
     qrPreview.style.display = 'none';
+    refreshFullPreview();
   }
 }
 
-function calculateRowsPerPage(options) {
-  const targetRows = options.rowsPerPage;
-  const headerBufferRows = 6;
-  return Math.max(10, targetRows - headerBufferRows);
-}
-
-function splitDataIntoPages(data, options) {
-  const pages = [];
-  const rowsPerNormalPage = options.rowsPerPage;
-  const rowsPerFirstPage = calculateRowsPerPage(options);
-  let remainingData = [...data];
-  if (remainingData.length > 0) {
-    const firstPageRows = Math.min(rowsPerFirstPage, remainingData.length);
-    pages.push(remainingData.slice(0, firstPageRows));
-    remainingData = remainingData.slice(firstPageRows);
-  }
-  while (remainingData.length > 0) {
-    const pageRows = Math.min(rowsPerNormalPage, remainingData.length);
-    pages.push(remainingData.slice(0, pageRows));
-    remainingData = remainingData.slice(pageRows);
-  }
-  return pages;
-}
+/* ====== 全ページ印刷プレビュー ====== */
 async function refreshFullPreview() {
   if (!DATA_ALL || DATA_ALL.length === 0) {
     document.getElementById('fullPreviewArea').innerHTML = '<div style="padding:20px; text-align:center;">データがありません</div>';
@@ -753,7 +805,7 @@ async function refreshFullPreview() {
     titleSize: document.getElementById('titleFontSize').value,
     includeQR: document.getElementById('includeQR').checked,
     qrWithTitle: document.getElementById('qrWithTitle').checked,
-    qrSize: parseInt(document.getElementById('qrSize').value),
+    qrSize: document.getElementById('qrSize').value,
     showInitial: document.getElementById('printInitial').checked,
     showName: document.getElementById('printName').checked,
     showAddress: document.getElementById('printAddress').checked,
@@ -764,45 +816,62 @@ async function refreshFullPreview() {
     bodyFontSize: document.getElementById('bodyFontSize').value
   };
   
-  const pages = splitDataIntoPages(DATA_ALL, options);
+  const previewArea = document.getElementById('fullPreviewArea');
   
+  // QRコード生成
   let qrDataURL = null;
-  if (options.includeQR && typeof QRCode !== 'undefined') {
+  if (options.includeQR) {
     const url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html');
     try {
-      const canvas = await QRCode.toCanvas(url, { width: options.qrSize, margin: 1 });
-      qrDataURL = canvas.toDataURL();
-    } catch(err) { console.error('QRコード生成エラー:', err); }
+      qrDataURL = await QRCode.toDataURL(url, {
+        width: parseInt(options.qrSize),
+        margin: 1
+      });
+    } catch (err) {
+      console.error('QRコード生成エラー:', err);
+    }
   }
   
-  const previewArea = document.getElementById('fullPreviewArea');
   let html = '<div style="font-family:Meiryo,\'メイリオ\',sans-serif;">';
   
-  for (let page = 0; page < pages.length; page++) {
-    const pageData = pages[page];
+  const rowsPerPage = options.rowsPerPage;
+  const totalPages = Math.ceil(DATA_ALL.length / rowsPerPage);
+  
+  // 全ページをループ
+  for (let page = 0; page < totalPages; page++) {
+    const startIdx = page * rowsPerPage;
+    const endIdx = Math.min(startIdx + rowsPerPage, DATA_ALL.length);
+    const pageData = DATA_ALL.slice(startIdx, endIdx);
+    
     html += '<div class="print-preview-page" style="background:white;">';
     
-    if (page === 0) {
-      if (options.includeQR && options.qrWithTitle && qrDataURL) {
-        html += '<div class="print-preview-header">';
-        html += `<div class="print-preview-title" style="font-size:${options.titleSize};">${escapeHtml(options.title)}</div>`;
-        html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-        html += '</div>';
-      } else if (options.includeQR && qrDataURL) {
-        html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${escapeHtml(options.title)}</div>`;
-        html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-      } else {
-        html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${escapeHtml(options.title)}</div>`;
-      }
+    // ヘッダー
+    if (options.includeQR && options.qrWithTitle && qrDataURL && page === 0) {
+      html += '<div class="print-preview-header">';
+      html += `<div class="print-preview-title" style="font-size:${options.titleSize};">${options.title}</div>`;
+      html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+      html += '</div>';
+    } else if (options.includeQR && qrDataURL && page === 0) {
+      html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+      html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+    } else if (page === 0) {
+      html += `<div class="print-preview-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+    }
+    
+    // 新着情報（1ページ目のみ）
+    if (options.showNews && page === 0) {
+      const newsItems = [
+        document.getElementById('n1').value,
+        document.getElementById('n2').value,
+        document.getElementById('n3').value
+      ].filter(Boolean);
       
-      if (options.showNews) {
-        const newsItems = [document.getElementById('n1').value, document.getElementById('n2').value, document.getElementById('n3').value].filter(Boolean);
-        if (newsItems.length > 0) {
-          html += `<div class="print-preview-news">📢 ${escapeHtml(newsItems.join(' ／ '))}</div>`;
-        }
+      if (newsItems.length > 0) {
+        html += `<div class="print-preview-news">📢 ${newsItems.join(' ／ ')}</div>`;
       }
     }
     
+    // テーブル
     let tableHeader = '<tr>';
     if (options.showInitial) tableHeader += '<th>頭文字</th>';
     if (options.showName) tableHeader += '<th>ホテル名</th>';
@@ -810,38 +879,40 @@ async function refreshFullPreview() {
     if (options.showNote) tableHeader += '<th>備考</th>';
     tableHeader += '</tr>';
     
-    html += `<table class="print-preview-table" style="font-size:${options.bodyFontSize};">`;
+    html += `<table class="print-preview-table">`;
     html += `<thead>${tableHeader}</thead><tbody>`;
     
     pageData.forEach(h => {
       html += '<tr>';
-      if (options.showInitial) html += `<td>${escapeHtml(h.initial || '')}</td>`;
-      if (options.showName) html += `<td>${escapeHtml(h.name || '')}</td>`;
-      if (options.showAddress) html += `<td>${escapeHtml(h.address || '')}</td>`;
-      if (options.showNote) html += `<td>${escapeHtml(h.note || '')}</td>`;
+      if (options.showInitial) html += `<td>${h.initial || ''}</td>`;
+      if (options.showName) html += `<td>${h.name || ''}</td>`;
+      if (options.showAddress) html += `<td>${h.address || ''}</td>`;
+      if (options.showNote) html += `<td>${h.note || ''}</td>`;
       html += '</tr>';
     });
     
     html += '</tbody></table>';
     
+    // ページ番号
     if (options.showPageNumbers) {
-      html += `<div class="print-preview-page-num">- ${page + 1}/${pages.length} -</div>`;
+      html += `<div class="print-preview-page-num">- ${page + 1}/${totalPages} -</div>`;
     }
+    
     html += '</div>';
   }
+  
   html += '</div>';
   previewArea.innerHTML = html;
 }
 
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
-
+/* ====== 印刷実行（PDF出力対応） ====== */
 async function executePrint() {
   const options = {
     title: document.getElementById('printTitle').value,
     titleSize: document.getElementById('titleFontSize').value,
     includeQR: document.getElementById('includeQR').checked,
     qrWithTitle: document.getElementById('qrWithTitle').checked,
-    qrSize: parseInt(document.getElementById('qrSize').value),
+    qrSize: document.getElementById('qrSize').value,
     showInitial: document.getElementById('printInitial').checked,
     showName: document.getElementById('printName').checked,
     showAddress: document.getElementById('printAddress').checked,
@@ -854,50 +925,73 @@ async function executePrint() {
   
   await generatePrintHTML(options);
   closePrintModal();
-  setTimeout(() => { window.print(); }, 200);
+  
+  // 少し遅延させてから印刷ダイアログを表示
+  setTimeout(() => {
+    window.print();
+  }, 200);
 }
 
 async function generatePrintHTML(options) {
   sortDataAll();
   
+  // QRコード生成
   let qrDataURL = null;
-  if (options.includeQR && typeof QRCode !== 'undefined') {
+  if (options.includeQR) {
     const url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html');
     try {
-      const canvas = await QRCode.toCanvas(url, { width: options.qrSize, margin: 1 });
-      qrDataURL = canvas.toDataURL();
-    } catch(err) { console.error('QRコード生成エラー:', err); }
+      qrDataURL = await QRCode.toDataURL(url, {
+        width: parseInt(options.qrSize),
+        margin: 1
+      });
+    } catch (err) {
+      console.error('QRコード生成エラー:', err);
+    }
   }
   
-  const pages = splitDataIntoPages(DATA_ALL, options);
   const printArea = document.getElementById('printArea');
   let html = '';
   
-  for (let page = 0; page < pages.length; page++) {
-    const pageData = pages[page];
-    if (page > 0) html += '<div class="page-break"></div>';
+  const rowsPerPage = options.rowsPerPage;
+  const totalPages = Math.ceil(DATA_ALL.length / rowsPerPage);
+  
+  for (let page = 0; page < totalPages; page++) {
+    const startIdx = page * rowsPerPage;
+    const endIdx = Math.min(startIdx + rowsPerPage, DATA_ALL.length);
+    const pageData = DATA_ALL.slice(startIdx, endIdx);
     
-    if (page === 0) {
-      if (options.includeQR && options.qrWithTitle && qrDataURL) {
-        html += '<div class="print-header">';
-        html += `<div class="print-title" style="font-size:${options.titleSize};">${escapeHtml(options.title)}</div>`;
-        html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-        html += '</div>';
-      } else if (options.includeQR && qrDataURL) {
-        html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${escapeHtml(options.title)}</div>`;
-        html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
-      } else {
-        html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${escapeHtml(options.title)}</div>`;
-      }
+    // 改ページ
+    if (page > 0) {
+      html += '<div class="page-break"></div>';
+    }
+    
+    // ヘッダー
+    if (options.includeQR && options.qrWithTitle && qrDataURL && page === 0) {
+      html += '<div class="print-header">';
+      html += `<div class="print-title" style="font-size:${options.titleSize};">${options.title}</div>`;
+      html += `<div><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+      html += '</div>';
+    } else if (options.includeQR && qrDataURL && page === 0) {
+      html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+      html += `<div style="text-align:center; margin-bottom:10px;"><img src="${qrDataURL}" style="width:${options.qrSize}px; height:${options.qrSize}px;"></div>`;
+    } else if (page === 0) {
+      html += `<div class="print-title" style="font-size:${options.titleSize}; text-align:center;">${options.title}</div>`;
+    }
+    
+    // 新着情報（1ページ目のみ）
+    if (options.showNews && page === 0) {
+      const newsItems = [
+        document.getElementById('n1').value,
+        document.getElementById('n2').value,
+        document.getElementById('n3').value
+      ].filter(Boolean);
       
-      if (options.showNews) {
-        const newsItems = [document.getElementById('n1').value, document.getElementById('n2').value, document.getElementById('n3').value].filter(Boolean);
-        if (newsItems.length > 0) {
-          html += `<div class="print-news">📢 ${escapeHtml(newsItems.join(' ／ '))}</div>`;
-        }
+      if (newsItems.length > 0) {
+        html += `<div class="print-news">📢 ${newsItems.join(' ／ ')}</div>`;
       }
     }
     
+    // テーブル
     let tableHeader = '<tr>';
     if (options.showInitial) tableHeader += '<th>頭文字</th>';
     if (options.showName) tableHeader += '<th>ホテル名</th>';
@@ -905,55 +999,107 @@ async function generatePrintHTML(options) {
     if (options.showNote) tableHeader += '<th>備考</th>';
     tableHeader += '</tr>';
     
-    html += `<table class="print-table" style="font-size:${options.bodyFontSize};">`;
+    html += `<table class="print-table">`;
     html += `<thead>${tableHeader}</thead><tbody>`;
     
     pageData.forEach(h => {
       html += '<tr>';
-      if (options.showInitial) html += `<td>${escapeHtml(h.initial || '')}</td>`;
-      if (options.showName) html += `<td>${escapeHtml(h.name || '')}</td>`;
-      if (options.showAddress) html += `<td>${escapeHtml(h.address || '')}</td>`;
-      if (options.showNote) html += `<td>${escapeHtml(h.note || '')}</td>`;
+      if (options.showInitial) html += `<td>${h.initial || ''}</td>`;
+      if (options.showName) html += `<td>${h.name || ''}</td>`;
+      if (options.showAddress) html += `<td>${h.address || ''}</td>`;
+      if (options.showNote) html += `<td>${h.note || ''}</td>`;
       html += '</tr>';
     });
     
     html += '</tbody></table>';
     
+    // ページ番号
     if (options.showPageNumbers) {
-      html += `<div class="print-page-num">- ${page + 1}/${pages.length} -</div>`;
+      html += `<div class="print-page-num">- ${page + 1}/${totalPages} -</div>`;
     }
   }
+  
   printArea.innerHTML = html;
 }
 
-/* ====== GitHub保存 ====== */
+/* ====== すべてGitHubに保存 ====== */
 async function saveAllToGitHub() {
   const token = document.getElementById('githubToken').value;
-  if (!token) { alert('GitHubトークンを入力してください'); return; }
-  if (!confirm(`現在${DATA_ALL.length}件のデータがあります。CSVと新着情報をGitHubに保存しますか？`)) return;
+  if (!token) {
+    alert('GitHubトークンを入力してください');
+    return;
+  }
+  
+  if (!GH_OWNER || !GH_REPO) {
+    alert('GitHubの設定（OWNER, REPO）が未入力です');
+    return;
+  }
+  
+  if (!confirm(`現在${DATA_ALL.length}件のデータがあります。GitHubに保存しますか？`)) {
+    return;
+  }
+  
   try {
     sortDataAll();
-    const csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n');
+    const csvContent = DATA_ALL.map(h => 
+      [h.initial, h.name, h.address, h.note].join(',')
+    ).join('\n');
+    
     await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel');
-    const newsData = { news1: document.getElementById('n1').value || '', news2: document.getElementById('n2').value || '', news3: document.getElementById('n3').value || '', updated: new Date().toLocaleString('ja-JP') };
-    await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel');
+    
+    const newsData = {
+      news1: document.getElementById('n1').value || '',
+      news2: document.getElementById('n2').value || '',
+      news3: document.getElementById('n3').value || '',
+      updated: new Date().toISOString()
+    };
+    const newsContent = JSON.stringify(newsData, null, 2);
+    
+    await saveFileToGitHub(token, NEWS_PATH, newsContent, 'Update news.json from admin panel');
+    
     alert('✅ CSVと新着情報をGitHubに保存しました\n数分後に反映されます');
-  } catch(e) { alert('❌ 保存に失敗しました: ' + e.message); console.error(e); }
+    
+  } catch (e) {
+    alert('❌ 保存に失敗しました: ' + e.message);
+    console.error(e);
+  }
 }
 
+/* ====== GitHubにファイルを保存 ====== */
 async function saveFileToGitHub(token, path, content, message) {
   const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}`;
+  
   let sha = null;
   try {
-    const getRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}` } });
-    if (getRes.ok) { const current = await getRes.json(); sha = current.sha; }
-  } catch(e) { console.log('新規ファイル作成:', path); }
+    const getRes = await fetch(apiUrl, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (getRes.ok) {
+      const current = await getRes.json();
+      sha = current.sha;
+    }
+  } catch (e) {
+    console.log('新規ファイル作成:', path);
+  }
+  
   const putRes = await fetch(apiUrl, {
     method: 'PUT',
-    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: message, content: btoa(unescape(encodeURIComponent(content))), sha: sha })
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: message,
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha: sha
+    })
   });
-  if (!putRes.ok) { const error = await putRes.json(); throw new Error(error.message || 'API error'); }
+  
+  if (!putRes.ok) {
+    const error = await putRes.json();
+    throw new Error(error.message || 'API error');
+  }
+  
   return putRes.json();
 }
 </script>
