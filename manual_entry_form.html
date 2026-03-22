@@ -6,7 +6,7 @@
 <title>管理（札幌ホテルリスト）</title>
 <meta name="format-detection" content="telephone=no,address=no,email=no">
 <style>
-  /* 基本スタイル（前回と同じ） */
+  /* 基本スタイル */
   body{font-family:Meiryo,'メイリオ',sans-serif;background:linear-gradient(145deg,#c0c0c0,#e0e0e0);margin:0;padding:14px;color:#222}
   .section-title{font-size:20px;margin:10px 0 6px;text-align:center;font-weight:bold}
   .panel{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:10px auto;max-width:1100px}
@@ -79,6 +79,7 @@
       padding: 4px 6px;
       background: white !important;
       color: black !important;
+      word-break: break-all;
     }
     .print-table th {
       background: #f0f0f0 !important;
@@ -127,7 +128,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
-  <!-- 管理画面UI（省略：前回と同じ） -->
+  <!-- 管理画面UI -->
   <div class="panel no-print">
     <h2 class="section-title">新着情報</h2>
     <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
@@ -274,7 +275,7 @@ function openPrintModal() { document.getElementById('printModal').style.display 
 function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
 
-// ========== 高さベース分割ロジック（理論値ベース） ==========
+// ========== 高さベース分割ロジック（環境依存ゼロの完全版） ==========
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
@@ -309,13 +310,17 @@ async function generateOptimizedPages() {
     document.getElementById('n3').value
   ].filter(v => v);
 
-  // ===== 理論値で高さ制限を設定（ブラウザ依存しない） =====
-  // A4横: 用紙高さ210mm、@pageマージン上下15mmずつ → 実効高さ180mm
-  // 1mm = 3.779527559px（CSSの定義）
-  const EFFECTIVE_HEIGHT_MM = 180;
-  const MAX_PAGE_HEIGHT_PX = EFFECTIVE_HEIGHT_MM * 3.78; // 約680px
-  const SAFETY_MARGIN_PX = 30; // 安全マージン
-  const MAX_HEIGHT = MAX_PAGE_HEIGHT_PX - SAFETY_MARGIN_PX; // 約650px
+  // ===== 環境依存ゼロ：実際のA4用紙高さを取得 =====
+  const pageMeasure = document.createElement('div');
+  pageMeasure.style.width = '297mm';
+  pageMeasure.style.height = '210mm';
+  pageMeasure.style.position = 'absolute';
+  pageMeasure.style.visibility = 'hidden';
+  document.body.appendChild(pageMeasure);
+  const MAX_PAGE_HEIGHT_PX = pageMeasure.offsetHeight;
+  document.body.removeChild(pageMeasure);
+  const SAFETY_MARGIN_PX = 25;
+  const MAX_HEIGHT = MAX_PAGE_HEIGHT_PX - SAFETY_MARGIN_PX;
 
   // 測定用ダミー
   const dummy = document.createElement('div');
@@ -333,49 +338,59 @@ async function generateOptimizedPages() {
     });
   }
 
-  // 1行あたりの高さを実測（フォントサイズに応じて正確に取得）
+  // 行高さを実測（表示列に合わせた構造で測定）
   function getRowHeight() {
     const testDiv = document.createElement('div');
-    testDiv.innerHTML = `<table class="print-table" style="font-size:${opt.bodyFontSize};border-collapse:collapse;"><tr><td style="padding:4px 6px;">テスト</td></tr></table>`;
+    let cols = '';
+    if (opt.showInitial) cols += '<td style="padding:4px 6px;">テスト爬虫';
+    if (opt.showName) cols += '<td style="padding:4px 6px;">テスト爬虫';
+    if (opt.showAddress) cols += '<td style="padding:4px 6px;">テスト爬虫';
+    if (opt.showNote) cols += '<td style="padding:4px 6px;">テスト爬虫';
+    if (cols === '') cols = '<td style="padding:4px 6px;">テスト爬虫';
+    testDiv.innerHTML = `<table class="print-table" style="font-size:${opt.bodyFontSize};border-collapse:collapse;"><tbody> caption${cols} </tbody>${'</table>'}`;
     testDiv.style.position = 'absolute';
     testDiv.style.visibility = 'hidden';
     document.body.appendChild(testDiv);
     const tr = testDiv.querySelector('tr');
-    const height = tr ? tr.offsetHeight : 28;
+    const height = tr ? tr.offsetHeight : 24;
     document.body.removeChild(testDiv);
     return height;
   }
 
-  function buildHTML(rows, isFirst, forMeasure) {
+  // ヘッダー部分のみを生成（テーブルなし、タイトル＋QR＋新着情報のみ）
+  function buildHeaderHTML(forMeasure) {
     let html = '';
-
-    if (isFirst) {
-      if (opt.includeQR && opt.qrWithTitle && qrDataURL) {
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:${opt.titleSize};font-weight:bold;">${escapeHtml(opt.title)}</div>
-          ${forMeasure 
-            ? `<div style="width:${opt.qrSize}px;height:${opt.qrSize}px;"></div>`
-            : `<img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;">`
-          }
-        </div>`;
-      } else if (opt.includeQR && qrDataURL) {
-        html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:8px;">${escapeHtml(opt.title)}</div>`;
-        html += `<div style="text-align:center;margin-bottom:12px;">${forMeasure ? `<div style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:inline-block;"></div>` : `<img src="${qrDataURL}" style="width:${opt.qrSize}px;">`}</div>`;
-      } else {
-        html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:12px;">${escapeHtml(opt.title)}</div>`;
-      }
-
-      if (opt.showNews && newsItems.length) {
-        html += `<div class="print-news-box" style="margin:10px 0;padding:8px;border:1px solid #8ab3a0;background:#f0f8f0;border-radius:4px;">`;
-        html += `<strong>📢 新着情報</strong><br>`;
-        newsItems.forEach((n,i)=> html += `${i+1}. ${escapeHtml(n)}<br>`);
-        html += `</div>`;
-      }
+    
+    if (opt.includeQR && opt.qrWithTitle && qrDataURL) {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:${opt.titleSize};font-weight:bold;">${escapeHtml(opt.title)}</div>
+        ${forMeasure 
+          ? `<div style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:block;"></div>`
+          : `<img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:block;">`
+        }
+      </div>`;
+    } else if (opt.includeQR && qrDataURL) {
+      html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:8px;">${escapeHtml(opt.title)}</div>`;
+      html += `<div style="text-align:center;margin-bottom:12px;">${forMeasure ? `<div style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:inline-block;"></div>` : `<img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:inline-block;">`}</div>`;
+    } else {
+      html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:12px;">${escapeHtml(opt.title)}</div>`;
     }
 
-    html += `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
+    if (opt.showNews && newsItems.length) {
+      html += `<div class="print-news-box" style="margin:10px 0;padding:8px;border:1px solid #8ab3a0;background:#f0f8f0;border-radius:4px;">`;
+      html += `<strong>📢 新着情報</strong><br>`;
+      newsItems.forEach((n,i)=> html += `${i+1}. ${escapeHtml(n)}<br>`);
+      html += `</div>`;
+    }
+    
+    return html;
+  }
+
+  // テーブル部分のみを生成（行データから）
+  function buildTableHTML(rows) {
+    let html = `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
     html += `<thead>`;
-    html += `  <tr>`;
+    html += `    <tr>`;
     if (opt.showInitial) html += `<th>頭文字</th>`;
     if (opt.showName) html += `<th>ホテル名</th>`;
     if (opt.showAddress) html += `<th>住所</th>`;
@@ -385,14 +400,40 @@ async function generateOptimizedPages() {
 
     for(let h of rows) {
       html += `<tr>`;
-      if (opt.showInitial) html += `<td style="border:1px solid black;padding:4px 6px;">${escapeHtml(h.initial||'')}</td>`;
-      if (opt.showName) html += `<td style="border:1px solid black;padding:4px 6px;">${escapeHtml(h.name||'')}</td>`;
-      if (opt.showAddress) html += `<td style="border:1px solid black;padding:4px 6px;">${escapeHtml(h.address||'')}</td>`;
-      if (opt.showNote) html += `<td style="border:1px solid black;padding:4px 6px;">${escapeHtml(h.note||'')}</td>`;
+      if (opt.showInitial) html += `<td style="border:1px solid black;padding:4px 6px;word-break:break-all;">${escapeHtml(h.initial||'')}</td>`;
+      if (opt.showName) html += `<td style="border:1px solid black;padding:4px 6px;word-break:break-all;">${escapeHtml(h.name||'')}</td>`;
+      if (opt.showAddress) html += `<td style="border:1px solid black;padding:4px 6px;word-break:break-all;">${escapeHtml(h.address||'')}</td>`;
+      if (opt.showNote) html += `<td style="border:1px solid black;padding:4px 6px;word-break:break-all;">${escapeHtml(h.note||'')}</td>`;
       html += `</tr>`;
     }
 
     html += `</tbody></table>`;
+    return html;
+  }
+
+  // 完全なページHTMLを生成（ヘッダー＋テーブル＋ページ番号）
+  function buildFullPageHTML(rows, isFirst, pageNum, totalPages) {
+    let html = '';
+    if (isFirst) {
+      html += buildHeaderHTML(false);
+    }
+    html += buildTableHTML(rows);
+    if (opt.showPageNumbers) {
+      html += `<div class="print-page-num">- ${pageNum}/${totalPages} -</div>`;
+    }
+    return html;
+  }
+
+  // 測定用：ヘッダー＋テーブル＋ページ番号（仮）
+  function buildMeasureHTML(rows, isFirst) {
+    let html = '';
+    if (isFirst) {
+      html += buildHeaderHTML(true);
+    }
+    html += buildTableHTML(rows);
+    if (opt.showPageNumbers) {
+      html += `<div class="print-page-num">- 1/1 -</div>`;
+    }
     return html;
   }
 
@@ -401,36 +442,37 @@ async function generateOptimizedPages() {
     return dummy.scrollHeight;
   }
 
-  // ヘッダー部分（1ページ目のみ）の高さを事前計算
+  // ヘッダー部分のみの高さを正確に測定
   let headerHeight = 0;
   if (DATA_ALL.length > 0) {
-    const headerHTML = buildHTML([], true, true);
-    headerHeight = measure(headerHTML);
+    const headerOnlyHTML = buildHeaderHTML(true);
+    headerHeight = measure(headerOnlyHTML);
   }
 
-  // 1行あたりの高さを取得
   const rowHeight = getRowHeight();
   
-  // 1ページあたりの最大行数（ヘッダー分を差し引く）
-  const maxRowsPerPage = Math.floor((MAX_HEIGHT - headerHeight) / rowHeight);
+  // 1ページ目と2ページ目以降で最大行数を分ける
+  const maxRowsFirstPage = Math.floor((MAX_HEIGHT - headerHeight) / rowHeight);
+  const maxRowsOtherPage = Math.floor(MAX_HEIGHT / rowHeight);
   
-  // 高さベースの分割（行数ベースで効率的に分割）
+  // 分割実行
   let pages = [];
   let start = 0;
 
   while(start < DATA_ALL.length){
-    let end = Math.min(start + maxRowsPerPage, DATA_ALL.length);
+    const isFirstPage = pages.length === 0;
+    const limit = isFirstPage ? maxRowsFirstPage : maxRowsOtherPage;
+    let end = Math.min(start + limit, DATA_ALL.length);
     
-    // 実際の高さを確認（必要に応じて微調整）
+    // 実際の高さを確認し、必要なら微調整
     let testRows = DATA_ALL.slice(start, end);
-    let testHTML = buildHTML(testRows, pages.length === 0, true);
+    let testHTML = buildMeasureHTML(testRows, isFirstPage);
     let h = measure(testHTML);
     
-    // 高さオーバーの場合、行数を減らす
     while(h > MAX_HEIGHT && end > start + 1) {
       end--;
       testRows = DATA_ALL.slice(start, end);
-      testHTML = buildHTML(testRows, pages.length === 0, true);
+      testHTML = buildMeasureHTML(testRows, isFirstPage);
       h = measure(testHTML);
     }
     
@@ -440,16 +482,13 @@ async function generateOptimizedPages() {
 
   document.body.removeChild(dummy);
 
-  // 最終HTML生成
+  // 最終HTML生成（ページ番号付き）
   let resultPages = [];
   for(let i = 0; i < pages.length; i++) {
     let p = pages[i];
     let pageData = DATA_ALL.slice(p.start, p.end);
     let pageHTML = `<div class="print-page">`;
-    pageHTML += buildHTML(pageData, i === 0, false);
-    if(opt.showPageNumbers) {
-      pageHTML += `<div class="print-page-num">- ${i+1}/${pages.length} -</div>`;
-    }
+    pageHTML += buildFullPageHTML(pageData, i === 0, i + 1, pages.length);
     pageHTML += `</div>`;
     resultPages.push(pageHTML);
   }
@@ -488,4 +527,3 @@ async function saveFileToGitHub(token, path, content, message) { let api = 'http
 </script>
 </body>
 </html>
-
