@@ -6,6 +6,43 @@
 <title>管理（札幌ホテルリスト）</title>
 <meta name="format-detection" content="telephone=no,address=no,email=no">
 <style>
+/* iPhone自動リンク対策（完全版） */
+a {
+  color: #000 !important;
+  text-decoration: none !important;
+}
+
+a:visited,
+a:active,
+a:hover {
+  color: #000 !important;
+}
+
+/* Safari強制上書き（全要素の文字色を強制） */
+* {
+  -webkit-text-fill-color: #000 !important;
+}
+
+/* 追加：body, span, div, p の文字色を明示的に強制 */
+body, span, div, p {
+  -webkit-text-fill-color: #000 !important;
+  color: #000 !important;
+}
+
+/* 追加：input, textarea の文字色を強制（入力欄の文字も黒に） */
+input, textarea {
+  -webkit-text-fill-color: #000 !important;
+  color: #000 !important;
+}
+
+/* 電話・住所リンク潰し */
+a[href^="tel"],
+a[href^="mailto"] {
+  color: #000 !important;
+  pointer-events: none;
+  text-decoration: none !important;
+}
+
   /* 基本スタイル (manual_entry_form (5).html から継承) */
   body{font-family:Meiryo,'メイリオ',sans-serif;background:linear-gradient(145deg,#c0c0c0,#e0e0e0);margin:0;padding:14px;color:#222}
   .section-title{font-size:20px;margin:10px 0 6px;text-align:center;font-weight:bold}
@@ -346,17 +383,21 @@ async function generateOptimizedPages() {
     let html = `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
     if (isFirstPage) {
       html += `<thead>`;
-      html += `<tr>`;
-      if (opt.showInitial) html += `<th>頭文字</th>`;
-      if (opt.showName) html += `<th>ホテル名</th>`;
-      if (opt.showAddress) html += `<th>住所</th>`;
-      if (opt.showNote) html += `<th>備考</th>`;
+      html += `®<th style="background:#f0f0f0;">No.</th>`;
+      if (opt.showInitial) html += `<th style="background:#f0f0f0;">頭文字</th>`;
+      if (opt.showName) html += `<th style="background:#f0f0f0;">ホテル名</th>`;
+      if (opt.showAddress) html += `<th style="background:#f0f0f0;">住所</th>`;
+      if (opt.showNote) html += `<th style="background:#f0f0f0;">備考</th>`;
       html += `</tr>`;
       html += `</thead>`;
     }
     html += `<tbody>`;
-    for(let h of rows) {
-      html += `<tr>`;
+    let rowNumStart = isFirstPage ? 1 : 0;
+    for(let idx = 0; idx < rows.length; idx++) {
+      let h = rows[idx];
+      let displayNum = isFirstPage ? (idx+1) : '';
+      html += `®`;
+      html += `<td style="text-align:center;">${displayNum}</td>`;
       if (opt.showInitial) html += `<td>${escapeHtml(h.initial||'')}</td>`;
       if (opt.showName) html += `<td>${escapeHtml(h.name||'')}</td>`;
       if (opt.showAddress) html += `<td>${escapeHtml(h.address||'')}</td>`;
@@ -444,3 +485,4 @@ async function saveFileToGitHub(token, path, content, message) { let api = 'http
 </script>
 </body>
 </html>
+
