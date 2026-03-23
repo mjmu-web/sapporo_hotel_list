@@ -296,7 +296,8 @@ function openPrintModal() { document.getElementById('printModal').style.display 
 function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
 
-// ========== 行数固定分割ロジック（安定最優先）(manual_entry_form (5).html から継承) ==========
+// ========== 行数固定分割ロジック（安定最優先） ==========
+// 【修正】1ページ目:26行、2ページ目以降:38行に変更
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
@@ -344,12 +345,14 @@ async function generateOptimizedPages() {
   function buildTableHTML(rows, isFirstPage) {
     let html = `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
     if (isFirstPage) {
-      html += `<thead><tr>`;
+      html += `<thead>`;
+      html += `<tr>`;
       if (opt.showInitial) html += `<th>頭文字</th>`;
       if (opt.showName) html += `<th>ホテル名</th>`;
       if (opt.showAddress) html += `<th>住所</th>`;
       if (opt.showNote) html += `<th>備考</th>`;
-      html += `</tr></thead>`;
+      html += `</tr>`;
+      html += `</thead>`;
     }
     html += `<tbody>`;
     for(let h of rows) {
@@ -360,12 +363,14 @@ async function generateOptimizedPages() {
       if (opt.showNote) html += `<td>${escapeHtml(h.note||'')}</td>`;
       html += `</tr>`;
     }
-    html += `</tbody></table>`;
+    html += `</tbody>`;
+    html += `</table>`;
     return html;
   }
 
-  const FIRST_PAGE_ROWS = 28;
-  const OTHER_PAGE_ROWS = 40;
+  // 【修正箇所】1ページ目:26行、2ページ目以降:38行
+  const FIRST_PAGE_ROWS = 26;
+  const OTHER_PAGE_ROWS = 38;
 
   let pages = [];
   let start = 0;
@@ -407,8 +412,9 @@ async function refreshFullPreview() {
   let pageDetails = [];
   let start = 0;
   let pageIdx = 0;
-  const FIRST_PAGE_ROWS = 28;
-  const OTHER_PAGE_ROWS = 40;
+  // 【修正箇所】プレビュー情報表示用の行数も26/38に合わせる
+  const FIRST_PAGE_ROWS = 26;
+  const OTHER_PAGE_ROWS = 38;
   while (start < DATA_ALL.length) {
     let limit = pageIdx === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
     let end = Math.min(start + limit, DATA_ALL.length);
