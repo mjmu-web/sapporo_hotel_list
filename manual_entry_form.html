@@ -369,7 +369,7 @@ async function generateOptimizedPages() {
   }
 
   // 【修正箇所】1ページ目:26行、2ページ目以降:38行
-  const FIRST_PAGE_ROWS = 25;
+  const FIRST_PAGE_ROWS = 24;
   const OTHER_PAGE_ROWS = 37;
 
   let pages = [];
@@ -413,7 +413,7 @@ async function refreshFullPreview() {
   let start = 0;
   let pageIdx = 0;
   // 【修正箇所】プレビュー情報表示用の行数も26/38に合わせる
-  const FIRST_PAGE_ROWS = 25;
+  const FIRST_PAGE_ROWS = 24;
   const OTHER_PAGE_ROWS = 37;
   while (start < DATA_ALL.length) {
     let limit = pageIdx === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
