@@ -1,12 +1,37 @@
 <!doctype html>
 <html lang="ja">
 <head>
+<meta name="format-detection" content="telephone=no,address=no,email=no">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>札幌ホテルリスト</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#c0c0c0">
 <style>
+/* iPhone自動リンク対策（完全版） */
+a {
+  color: #000 !important;
+  text-decoration: none !important;
+}
+
+a:visited,
+a:active,
+a:hover {
+  color: #000 !important;
+}
+
+/* Safari強制上書き */
+* {
+  -webkit-text-fill-color: #000 !important;
+}
+
+/* 電話・住所リンク潰し */
+a[href^="tel"],
+a[href^="mailto"] {
+  color: #000 !important;
+  pointer-events: none;
+  text-decoration: none !important;
+}
 body{
   font-family:Meiryo,'メイリオ',sans-serif;
   background:linear-gradient(145deg,#c0c0c0,#e0e0e0);
