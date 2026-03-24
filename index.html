@@ -8,71 +8,71 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#c0c0c0">
 <style>
-/* iPhone自動リンク対策（完全版） */
+/* ===== 必要最低限のCSS（-webkit-text-fill-color完全削除） ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Meiryo, 'メイリオ', sans-serif;
+  background: linear-gradient(145deg, #c0c0c0, #e0e0e0);
+  padding: 16px 16px 70px 16px;
+  color: #000;
+}
+
+/* リンクは自動的に青くならないように制御 */
 a {
-  color: #000 !important;
+  color: inherit !important;
   text-decoration: none !important;
 }
 
-a:visited,
-a:active,
-a:hover {
-  color: #000 !important;
-}
-
-/* Safari強制上書き */
-
-/* 電話・住所リンク潰し */
+/* 電話番号・メールアドレスのリンク化を無効化 */
 a[href^="tel"],
 a[href^="mailto"] {
-  color: #000 !important;
+  color: inherit !important;
   pointer-events: none;
   text-decoration: none !important;
 }
 
-/* ===== 修正: ナビゲーションボタン（☁ ⚾）の色を元に戻す ===== */
-#topBtns .metal-round-lg {
-  -webkit-text-fill-color: auto !important;
-}
-/* ===== 修正ここまで ===== */
-
-body{
-  font-family:Meiryo,'メイリオ',sans-serif;
-  background:linear-gradient(145deg,#c0c0c0,#e0e0e0);
-  margin:0;
-  padding:16px 16px 70px 16px;
-}
-/* ===== NHKニュース（最上部） ===== */
+/* ニュース部分（オレンジ色を確実に表示） */
 #newsBoard {
-  background:#000;
-  border-radius:5px;
-  padding:6px 0;
-  overflow:hidden;
-  white-space:nowrap;
-  text-align:left;
-  margin:-8px -8px 10px -8px;
+  background: #000;
+  border-radius: 5px;
+  padding: 6px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
+  margin: -8px -8px 10px -8px;
 }
 #newsContent {
-  display:inline-block;
-  padding-left:100%;
-  color:#ffa500;
-  font-family:'MS Gothic','Osaka-Mono',monospace;
-  font-weight:bold;
-  font-size:1.05em;
+  display: inline-block;
+  padding-left: 100%;
+  color: #ffa500 !important;
+  font-family: 'MS Gothic', 'Osaka-Mono', monospace;
+  font-weight: bold;
+  font-size: 1.05em;
   animation: scrollNews 60s linear infinite;
   white-space: nowrap;
+}
+#newsContent a {
+  color: #ffa500 !important;
+  text-decoration: none;
+  border-bottom: 1px dotted #ffa500;
+}
+#newsContent a:hover {
+  opacity: 0.8;
 }
 @keyframes scrollNews {
   0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
-#newsBoard:hover #newsContent { animation-play-state: paused; }
-#newsContent,
-#newsContent a {
-  -webkit-text-fill-color: #ffa500 !important;
-  color: #ffa500 !important;
+#newsBoard:hover #newsContent {
+  animation-play-state: paused;
 }
-/* 更新時間とスリープ防止を横並びにするコンテナ */
+
+/* 更新時間とスリープ防止バー */
 #infoBar {
   display: flex;
   align-items: center;
@@ -84,7 +84,6 @@ body{
   color: #000;
   opacity: 0.7;
 }
-/* スリープ防止インジケーター */
 #wakeLockIndicator {
   display: inline-block;
   background: rgba(0,0,0,0.7);
@@ -100,185 +99,79 @@ body{
 #wakeLockIndicator.active {
   background: rgba(0,100,0,0.8);
 }
-h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
-.metal-round-lg{
-  width:60px;height:60px;
-  border-radius:50%;
-  border:2px solid #999;
-  background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);
-  box-shadow:0 3px 6px rgba(0,0,0,.3),
-              inset 0 2px 3px rgba(255,255,255,.7),
-              inset 0 -3px 4px rgba(0,0,0,.3);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;
-  font-size: 1.5em;
+
+/* 共通ボタンスタイル（金属調） */
+.metal-round-lg, .metal-round, .metal-small, .long, .hotel-btn {
   cursor: pointer;
+  transition: transform 0.05s linear;
 }
-#topBtns{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  margin-bottom:8px;
+.metal-round-lg:active, .metal-round:active, .metal-small:active, .long:active, .hotel-btn:active {
+  transform: scale(0.96);
 }
-#newsLine{margin:4px auto 10px;text-align:center;}
-#newsTicker{overflow:hidden;white-space:nowrap;box-sizing:border-box;
-  border-top:1px solid rgba(255,255,255,.35);
-  border-bottom:1px solid rgba(0,0,0,.25);padding:6px 0;}
-#newsTicker span{display:inline-block;padding-left:100%;
-  animation:ticker 20s linear infinite;font-weight:700;
-  font-size:1.05em;color:#222;}
-@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
-.btns{display:grid;grid-template-columns:repeat(5,60px);
-  gap:14px;justify-content:center;margin:10px auto;}
-.metal-round{width:60px;height:60px;border-radius:50%;border:2px solid #999;
-  background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);
-  box-shadow:0 3px 6px rgba(0,0,0,.3),
-              inset 0 2px 3px rgba(255,255,255,.7),
-              inset 0 -3px 4px rgba(0,0,0,.3);
-  font-weight:900;
+
+/* 見出し */
+h1 {
+  font-size: 28px;
+  text-shadow: 0 1px 0 #fff;
+  margin: 8px 0;
+  text-align: center;
+}
+
+/* トップボタン群（☁️ ⚾️ 等） */
+#topBtns {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.metal-round-lg {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #999;
+  background: linear-gradient(#fff, #d0d0d0 40%, #b0b0b0 60%, #e0e0e0);
+  box-shadow: 0 3px 6px rgba(0,0,0,.3), inset 0 2px 3px rgba(255,255,255,.7), inset 0 -3px 4px rgba(0,0,0,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
   font-size: 1.5em;
 }
-.alpha{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
-  max-width:520px;margin:6px auto 12px;}
-.long{padding:10px 20px;border-radius:9999px;border:2px solid #999;
-  background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);font-weight:700;}
-#results{max-width:1000px;margin:10px auto;text-align:left;}
-.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px;margin:8px 0; cursor:pointer;}
-.name{font-weight:700;}
-#speedArea{text-align:center;font-weight:bold;margin:6px 0;}
-#addHome{
-  position:fixed;left:10px;bottom:10px;
-  padding:8px 12px;border-radius:10px;border:2px solid #777;
-  background:linear-gradient(#fff,#ccc);z-index:5;
+
+/* 50音ボタン */
+.btns {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  gap: 14px;
+  justify-content: center;
+  margin: 10px auto;
 }
-/* オーバーレイ（背景と色は変えず、閉じるボタンは角丸黒枠・右下） */
-#overlay {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,0.7);
-  z-index:100;
+.metal-round {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #999;
+  background: linear-gradient(#fff, #d0d0d0 40%, #b0b0b0 60%, #e0e0e0);
+  box-shadow: 0 3px 6px rgba(0,0,0,.3), inset 0 2px 3px rgba(255,255,255,.7), inset 0 -3px 4px rgba(0,0,0,.3);
+  font-weight: 900;
+  font-size: 1.5em;
 }
-#overlay-content {
-  background:#fff;
-  padding:24px 20px 70px 20px;
-  border-radius:10px;
-  max-width:600px;
-  width:85%;
-  max-height:80vh;
-  overflow-y:auto;
-  text-align:center;
-  position:relative;
-  box-shadow:0 4px 12px rgba(0,0,0,0.3);
-  /* 年配者向けに文字サイズを大きく */
-  font-size: 1.4rem;
+.alpha {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  max-width: 520px;
+  margin: 6px auto 12px;
 }
-#overlay-content h3 {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
+.long {
+  padding: 10px 20px;
+  border-radius: 9999px;
+  border: 2px solid #999;
+  background: linear-gradient(#fff, #d0d0d0 40%, #b0b0b0 60%, #e0e0e0);
+  font-weight: 700;
+  font-size: 1em;
 }
-#overlay-content p {
-  font-size: 1.4rem;
-}
-#overlay-content button {
-  font-size: 1.3rem;
-  padding: 12px 20px;
-  margin: 8px;
-  border-radius: 8px;
-  border: 1px solid #999;
-  background: #e8e8e8;
-  cursor: pointer;
-}
-#overlay-content button:hover {
-  background: #d0d0d0;
-}
-/* 右下に配置する閉じるボタン（角丸四角・黒い線で囲う） */
-.close-btn-corner {
-  position:fixed;
-  bottom:16px;
-  right:16px;
-  background:#fff;
-  border:2px solid #000;
-  border-radius:12px;
-  padding:10px 24px;
-  font-size:1.2rem;
-  font-weight:bold;
-  color:#000;
-  cursor:pointer;
-  box-shadow:0 1px 3px rgba(0,0,0,0.1);
-  transition:0.1s linear;
-  z-index:15;
-}
-.close-btn-corner:hover {
-  background:#f0f0f0;
-}
-#modal {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,0.8);
-  z-index:200;
-}
-/* モーダルはスマホ画面いっぱいに広がり、文字も大きめ */
-#modal-content {
-  background:#fff;
-  padding:24px 20px 80px 20px;
-  width:100%;
-  max-width:100%;
-  height:auto;
-  min-height:60vh;
-  box-sizing:border-box;
-  border-radius:0;
-  position:relative;
-  font-size:1.2rem;
-  line-height:1.5;
-  overflow-y:auto;
-  box-shadow:none;
-}
-#modal-content h2 {
-  font-size:1.8rem;
-  margin-top:0;
-  margin-bottom:20px;
-}
-#modal-content p {
-  font-size:1.2rem;
-  margin:12px 0;
-}
-#modal-content a {
-  font-size:1.2rem;
-}
-#modal-content button {
-  margin-top:24px;
-}
-/* モーダル内の閉じるボタンも右下・角丸黒枠 */
-#modal .close-btn-corner {
-  bottom:20px;
-  right:20px;
-  background:#fff;
-  border:2px solid #000;
-  border-radius:12px;
-  padding:10px 24px;
-  font-size:1.1rem;
-  font-weight:bold;
-}
-#qrModal{position:fixed;top:0;left:0;width:100%;height:100%;display:none;
-  align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:300;}
-#qrBox{background:#fff;padding:20px;border-radius:10px;text-align:center;}
-#qrBox canvas{width:180px;height:180px;}
-.instruction{text-align:center;color:#666;margin:20px 0;font-size:16px;}
-.instruction strong { font-weight: bold; }
-.instruction i { font-style: italic; }
 .hotel-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -290,46 +183,228 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
   padding: 10px 0;
   border-radius: 6px;
   border: 2px solid #999;
-  background: linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);
+  background: linear-gradient(#fff, #d0d0d0 40%, #b0b0b0 60%, #e0e0e0);
   font-weight: 700;
   font-size: 1em;
-  box-shadow: 0 3px 6px rgba(0,0,0,.3),
-              inset 0 2px 3px rgba(255,255,255,.7),
-              inset 0 -3px 4px rgba(0,0,0,.3);
+  box-shadow: 0 3px 6px rgba(0,0,0,.3), inset 0 2px 3px rgba(255,255,255,.7), inset 0 -3px 4px rgba(0,0,0,.3);
+}
+
+/* 説明文 */
+.instruction {
+  text-align: center;
+  color: #666;
+  margin: 20px 0;
+  font-size: 16px;
+}
+.instruction strong {
+  font-weight: bold;
+}
+.instruction i {
+  font-style: italic;
+}
+
+/* ホテル一覧カード */
+#results {
+  max-width: 1000px;
+  margin: 10px auto;
+  text-align: left;
+}
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.card:active {
+  background: #f5f5f5;
+}
+.name {
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-bottom: 4px;
+}
+
+/* 速度表示エリア */
+#speedArea {
+  text-align: center;
+  font-weight: bold;
+  margin: 6px 0;
+  font-size: 1.2em;
+}
+
+/* ホームに追加ボタン */
+#addHome {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px solid #777;
+  background: linear-gradient(#fff, #ccc);
+  z-index: 5;
+  font-weight: bold;
   cursor: pointer;
 }
-#bottomBtns{
-  position:fixed;
-  right:10px;
-  bottom:10px;
-  display:flex;
-  gap:10px;
-  z-index:10;
+
+/* 右下固定ボタン群 */
+#bottomBtns {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
 }
-.metal-small{
-  width:40px;height:40px;
-  border-radius:50%;
-  border:2px solid #999;
-  background:linear-gradient(#fff,#d0d0d0 40%,#b0b0b0 60%,#e0e0e0);
-  box-shadow:0 3px 6px rgba(0,0,0,.3),
-              inset 0 2px 3px rgba(255,255,255,.7),
-              inset 0 -3px 4px rgba(0,0,0,.3);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;
+.metal-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #999;
+  background: linear-gradient(#fff, #d0d0d0 40%, #b0b0b0 60%, #e0e0e0);
+  box-shadow: 0 3px 6px rgba(0,0,0,.3), inset 0 2px 3px rgba(255,255,255,.7), inset 0 -3px 4px rgba(0,0,0,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+
+/* オーバーレイ（絞り込みポップアップ） */
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+}
+#overlay-content {
+  background: #fff;
+  padding: 24px 20px 70px 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 85%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-size: 1.3rem;
+}
+#overlay-content h3 {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+}
+#overlay-content button {
+  font-size: 1.2rem;
+  padding: 10px 18px;
+  margin: 6px;
+  border-radius: 8px;
+  border: 1px solid #999;
+  background: #e8e8e8;
   cursor: pointer;
 }
-.metal-round-lg:active {
-  transform: scale(0.92);
+#overlay-content button:active {
+  background: #d0d0d0;
 }
-/* ニュースエラー時の表示 */
-.news-error {
-  color: #ff6666 !important;
-  padding: 0 20px;
+
+/* モーダル（ホテル詳細） */
+#modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.8);
+  z-index: 200;
+}
+#modal-content {
+  background: #fff;
+  padding: 24px 20px 80px 20px;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 60vh;
+  box-sizing: border-box;
+  border-radius: 0;
+  position: relative;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  overflow-y: auto;
+}
+#modal-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+#modal-content a {
+  color: #0066cc !important;
+  text-decoration: underline !important;
+}
+#modal-content a:active {
+  opacity: 0.7;
+}
+
+/* 共通の閉じるボタン（右下・角丸黒枠） */
+.close-btn-corner {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 12px;
+  padding: 10px 24px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: 0.1s linear;
+  z-index: 15;
+}
+.close-btn-corner:active {
+  background: #f0f0f0;
+  transform: scale(0.96);
+}
+
+/* QRモーダル */
+#qrModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 300;
+}
+#qrBox {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+#qrBox canvas {
+  width: 180px;
+  height: 180px;
 }
 </style>
 </head>
 <body>
 
+<!-- NHKニュース横断幕 -->
 <div id="newsBoard"><div id="newsContent">📻 NHKニュースを取得中...</div></div>
 
 <div id="infoBar">
@@ -339,7 +414,7 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 
 <div id="topBtns">
   <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=札幌+天気','_blank')">☁️</button>
-<button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=日ハム+試合結果','_blank')">⚾️</button>
+  <button class="metal-round-lg" onclick="window.open('https://www.google.com/search?q=日ハム+試合結果','_blank')">⚾️</button>
   <button class="metal-round-lg" onclick="window.open('https://www.hokkaido-airports.com/ja/new-chitose/airport/fis/?purposeType=departure&airlineType=domestic&airport=&airline=&flightNumber=&timeFrom=&timeTo=#anchor-result')">✈️</button>
   <button class="metal-round-lg" onclick="window.open('https://www3.jrhokkaido.co.jp/webunkou/')">🚃</button>
   <button class="metal-round-lg" onclick="window.open('https://www.drivetraffic.jp/realtime-area?t=r&lat=42,56,55.18&lon=141,30,57.85&lv=2')">🛣️</button>
@@ -349,9 +424,11 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
   <h1>札幌ホテルリスト</h1>
 </div>
 
+<!-- 固定ニュースティッカー（新着情報） -->
 <div id="newsLine"><div id="newsTicker"><span id="marqueeAll"></span></div></div>
 <div id="speedArea"></div>
 
+<!-- 50音ボタン -->
 <div class="btns" id="kanaBtns">
   <button class="metal-round" data-g="あ">あ</button><button class="metal-round" data-g="か">か</button><button class="metal-round" data-g="さ">さ</button><button class="metal-round" data-g="た">た</button><button class="metal-round" data-g="な">な</button><button class="metal-round" data-g="は">は</button><button class="metal-round" data-g="ま">ま</button><button class="metal-round" data-g="や">や</button><button class="metal-round" data-g="ら">ら</button><button class="metal-round" data-g="わ">わ</button>
 </div>
@@ -385,19 +462,13 @@ h1{font-size:28px;text-shadow:0 1px 0 #fff;margin:8px 0;}
 
 <button id="addHome">🏠 ホームに追加</button>
 
-<div id="overlay">
-  <div id="overlay-content">
-    <!-- 閉じるボタンは右下に角丸黒枠で配置（動的に生成される内容に合わせて、常に表示させる） -->
-  </div>
-</div>
-<div id="modal">
-  <div id="modal-content"></div>
-</div>
+<div id="overlay"><div id="overlay-content"></div></div>
+<div id="modal"><div id="modal-content"></div></div>
 <div id="qrModal"><div id="qrBox"><canvas id="qrCanvas"></canvas><br><button onclick="closeQR()">閉じる</button></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script>
-/* ====== スリープ防止機能 ====== */
+// ==================== スリープ防止機能 ====================
 let wakeLock = null;
 const wakeLockIndicator = document.getElementById('wakeLockIndicator');
 
@@ -407,19 +478,15 @@ async function requestWakeLock() {
       wakeLock = await navigator.wakeLock.request('screen');
       wakeLockIndicator.innerHTML = '🔋 スリープ防止: ON';
       wakeLockIndicator.classList.add('active');
-      
       wakeLock.addEventListener('release', () => {
         wakeLockIndicator.innerHTML = '💤 スリープ防止: OFF';
         wakeLockIndicator.classList.remove('active');
         wakeLock = null;
       });
-      
-      console.log('スリープ防止を有効にしました');
     } else {
       wakeLockIndicator.innerHTML = '❌ 未対応';
     }
   } catch (err) {
-    console.error('スリープ防止の有効化に失敗:', err);
     wakeLockIndicator.innerHTML = '❌ 失敗';
   }
 }
@@ -442,84 +509,64 @@ async function toggleWakeLock() {
 document.addEventListener('DOMContentLoaded', () => {
   requestWakeLock();
 });
-
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && wakeLock === null) {
     await requestWakeLock();
   }
 });
 
-/* ====== 正規化された先頭文字を取得する関数（漢字用initial優先） ====== */
-function getNormalizedFirstCharFromHotel(hotel){
-  // initial があればそれを優先（カタカナまたは英字が入っている想定）
+// ==================== ホテルデータ管理 ====================
+let DATA_ALL = [], DATA = [];
+
+function getNormalizedFirstCharFromHotel(hotel) {
   if (hotel.initial && hotel.initial.trim() !== '') {
     let init = hotel.initial.trim();
-    // ひらがなならカタカナに変換
     if (init >= 'ぁ' && init <= 'ん') {
       init = String.fromCharCode(init.charCodeAt(0) + 0x60);
     }
     return init;
   }
-  
-  // initialがなければホテル名から取得
   let name = hotel.name || '';
   if (!name) return '';
-  
-  // ホテルを除去してトリム
   let cleaned = name.replace(/^ホテル\s*/, '').trim();
-  
-  // 先頭の記号や空白を除去
   cleaned = cleaned.replace(/^[^ぁ-んァ-ン一-龠A-Za-z]+/, '');
-  
   if (cleaned.length === 0) return '';
-  
   let firstChar = cleaned.charAt(0);
-  
-  // ひらがなをカタカナに変換
   if (firstChar >= 'ぁ' && firstChar <= 'ん') {
     firstChar = String.fromCharCode(firstChar.charCodeAt(0) + 0x60);
   }
-  
   return firstChar;
 }
 
-/* ====== 以下、既存の機能 ====== */
-let installPromptEvent=null;
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  installPromptEvent=e;
-});
-document.getElementById('addHome').addEventListener('click',()=>{
-  if(installPromptEvent){
-    installPromptEvent.prompt();
-    installPromptEvent.userChoice.then(()=>installPromptEvent=null);
-  }else if(/iphone|ipad|ipod/i.test(navigator.userAgent)){
-    alert('Safariの共有メニューから「ホーム画面に追加」を選んでください。');
-  }else{
-    alert('ブラウザのメニューから「ホーム画面に追加」を選んでください。');
-  }
-});
+function generateKeywordsFromName(name) {
+  return name
+    .replace(/ホテル/g, ' ')
+    .replace(/[〈〉]/g, ' ')
+    .replace(/[()（）]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word && word.length > 1)
+    .map(word => word.toLowerCase())
+    .join(' ');
+}
 
-let DATA_ALL=[],DATA=[];
-
-async function loadCSV(){
+async function loadCSV() {
   try {
-    const r=await fetch('data/hotels.csv?t=' + Date.now());
+    const r = await fetch('data/hotels.csv?t=' + Date.now());
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const t=await r.text();
-    DATA_ALL=t.trim().split(/\r?\n/).filter(Boolean).map(l=>{
-      const p=l.split(',');
+    const t = await r.text();
+    DATA_ALL = t.trim().split(/\r?\n/).filter(Boolean).map(l => {
+      const p = l.split(',');
       const hotelData = {
-        initial:p[0]||'',
-        name:p[1]||'',
-        address:p[2]||'',
-        note:p[3]||''
+        initial: p[0] || '',
+        name: p[1] || '',
+        address: p[2] || '',
+        note: p[3] || ''
       };
       hotelData.keywords = generateKeywordsFromName(hotelData.name);
       return hotelData;
     });
     if (DATA_ALL.length === 0) throw new Error('データが空です');
-  } catch(e) {
+  } catch (e) {
     DATA_ALL = [
       {initial:'ア', name:'アパホテル〈札幌すすきの〉', address:'北海道札幌市中央区南5条西2', note:'大浴場あり', keywords:'アパ すすきの'},
       {initial:'ト', name:'東横INN札幌駅北口', address:'北海道札幌市北区北7条西2', note:'朝食無料', keywords:'東横イン きたぐち'},
@@ -539,50 +586,31 @@ async function loadCSV(){
   render(DATA_ALL);
 }
 
-document.addEventListener('DOMContentLoaded', loadCSV);
-
-function generateKeywordsFromName(name) {
-  return name
-    .replace(/ホテル/g, ' ')
-    .replace(/〈/g, ' ')
-    .replace(/〉/g, ' ')
-    .replace(/by/g, ' ')
-    .replace(/[()（）]/g, ' ')
-    .split(/\s+/)
-    .filter(word => word && word.length > 1)
-    .map(word => word.toLowerCase())
-    .join(' ');
+function mapLink(name) {
+  const ua = navigator.userAgent.toLowerCase();
+  const q = encodeURIComponent(name);
+  return /iphone|ipad|ipod/.test(ua) ? `maps://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-function mapLink(name){
-  const ua=navigator.userAgent.toLowerCase();
-  const q=encodeURIComponent(name);
-  return /iphone|ipad|ipod/.test(ua)
-    ? `maps://maps.apple.com/?q=${q}`
-    : `https://www.google.com/maps/search/?api=1&query=${q}`;
-}
-
-function render(list){
-  const el=document.getElementById('results');
-  if(list.length === 0){
+function render(list) {
+  const el = document.getElementById('results');
+  if (list.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:#666;margin:20px 0;">該当するホテルが見つかりませんでした</div>';
     return;
   }
-  el.innerHTML=list.map(h=>{
+  el.innerHTML = list.map(h => {
     const safeHotel = JSON.stringify(h).replace(/'/g, "\\'");
     return `<div class='card' onclick='enlargeCard(${safeHotel})'>
       <div class='name'>${h.name}</div>
       <div>📍 ${h.address}</div>
-      ${h.note?'<div>📝 '+h.note+'</div>':''}
+      ${h.note ? '<div>📝 ' + h.note + '</div>' : ''}
       <div>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a> ｜ 🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></div>
     </div>`;
   }).join('');
 }
 
-// 各行の文字を判定する関数（濁音・半濁音対応）
 function isCharInRow(char, rowType) {
   if (!char) return false;
-  
   const rows = {
     'あ': /[あいうえおぁぃぅぇぉアイウエオァィゥェォヴ]/,
     'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/,
@@ -595,163 +623,106 @@ function isCharInRow(char, rowType) {
     'ら': /[らりるれろラリルレロ]/,
     'わ': /[わをんワヲン]/
   };
-  
   return rows[rowType] && rows[rowType].test(char);
 }
 
-function showInitials(g){
-  const kana=['あ','か','さ','た','な','は','ま','や','ら','わ'];
-  
+function showInitials(g) {
+  const kana = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
   let filtered = [];
-  
-  if(kana.includes(g)){
-    filtered = DATA_ALL.filter(h => {
-      const firstChar = getNormalizedFirstCharFromHotel(h);
-      return isCharInRow(firstChar, g);
-    });
+  if (kana.includes(g)) {
+    filtered = DATA_ALL.filter(h => isCharInRow(getNormalizedFirstCharFromHotel(h), g));
   } else {
-    const map = {
-      'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO',
-      'PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ'
-    };
+    const map = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
     const set = map[g] || '';
-    
-    filtered = DATA_ALL.filter(h => {
-      const firstChar = getNormalizedFirstCharFromHotel(h);
-      return set.includes(firstChar);
-    });
+    filtered = DATA_ALL.filter(h => set.includes(getNormalizedFirstCharFromHotel(h)));
   }
-  
-  // ★修正①: 1件の場合は即座に拡大モーダルを表示
   if (filtered.length === 1) {
     enlargeCard(filtered[0]);
     return;
   }
-  
   if (filtered.length <= 3) {
     render(filtered);
     return;
   }
-  
   showKeywordSelection(filtered, g);
 }
 
-function searchByBrand(brand){
+function searchByBrand(brand) {
   const filtered = DATA_ALL.filter(h => h.name.includes(brand));
   render(filtered);
 }
 
 function showKeywordSelection(filtered, group) {
   const keywordMap = {};
-  
   filtered.forEach(hotel => {
     const keywords = (hotel.keywords || '').split(' ').filter(k => k.trim() && k.length > 1);
-    keywords.forEach(keyword => {
-      if (!keywordMap[keyword]) {
-        keywordMap[keyword] = [];
-      }
-      keywordMap[keyword].push(hotel);
+    keywords.forEach(kw => {
+      if (!keywordMap[kw]) keywordMap[kw] = [];
+      keywordMap[kw].push(hotel);
     });
   });
-  
-  const sortedKeywords = Object.keys(keywordMap)
-    .sort((a, b) => keywordMap[b].length - keywordMap[a].length);
-  
+  const sortedKeywords = Object.keys(keywordMap).sort((a,b) => keywordMap[b].length - keywordMap[a].length);
   let contentHTML = '<h3>さらに絞り込む</h3>';
-  
   if (sortedKeywords.length > 0) {
-    contentHTML += sortedKeywords.map(keyword => {
-      const count = keywordMap[keyword].length;
-      return `<button onclick="selectKeyword('${keyword}', '${group}')">${keyword} (${count}件)</button>`;
-    }).join('');
+    contentHTML += sortedKeywords.map(kw => `<button onclick="selectKeyword('${kw}', '${group}')">${kw} (${keywordMap[kw].length}件)</button>`).join('');
   } else {
     contentHTML += '<p>絞り込みキーワードがありません</p>';
   }
-  
   contentHTML += `<br><button onclick="showAllInGroup('${group}')" style="margin-top:10px;background:#eee;">全${filtered.length}件を表示</button>`;
-  
   const overlayContent = document.getElementById('overlay-content');
   overlayContent.innerHTML = contentHTML;
-  // 右下に共通の閉じるボタンを追加（角丸黒枠）
   addCloseButtonToOverlay();
   document.getElementById('overlay').style.display = 'flex';
 }
 
 function addCloseButtonToOverlay() {
   const overlayContent = document.getElementById('overlay-content');
-  // 既存の閉じるボタンがあれば削除して重複防止
-  const existingBtn = overlayContent.querySelector('.close-btn-corner');
-  if(existingBtn) existingBtn.remove();
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '閉じる';
-  closeBtn.className = 'close-btn-corner';
-  closeBtn.onclick = function() {
-    document.getElementById('overlay').style.display = 'none';
-  };
-  overlayContent.appendChild(closeBtn);
+  const existing = overlayContent.querySelector('.close-btn-corner');
+  if (existing) existing.remove();
+  const btn = document.createElement('button');
+  btn.textContent = '閉じる';
+  btn.className = 'close-btn-corner';
+  btn.onclick = () => document.getElementById('overlay').style.display = 'none';
+  overlayContent.appendChild(btn);
 }
 
 function showAllInGroup(group) {
   closeOverlay();
-  
+  const kana = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
   let filtered = [];
-  
-  if(['あ','か','さ','た','な','は','ま','や','ら','わ'].includes(group)){
-    filtered = DATA_ALL.filter(h => {
-      const firstChar = getNormalizedFirstCharFromHotel(h);
-      return isCharInRow(firstChar, group);
-    });
+  if (kana.includes(group)) {
+    filtered = DATA_ALL.filter(h => isCharInRow(getNormalizedFirstCharFromHotel(h), group));
   } else {
-    const map = {
-      'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO',
-      'PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ'
-    };
+    const map = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
     const set = map[group] || '';
-    
-    filtered = DATA_ALL.filter(h => {
-      const firstChar = getNormalizedFirstCharFromHotel(h);
-      return set.includes(firstChar);
-    });
+    filtered = DATA_ALL.filter(h => set.includes(getNormalizedFirstCharFromHotel(h)));
   }
-  
-  // ★修正③: 1件の場合は即座に拡大モーダルを表示
   if (filtered.length === 1) {
     enlargeCard(filtered[0]);
     return;
   }
-  
   render(filtered);
 }
 
 function selectKeyword(keyword, group) {
   closeOverlay();
-  
+  const kana = ['あ','か','さ','た','な','は','ま','や','ら','わ'];
   const matches = DATA_ALL.filter(h => {
     const firstChar = getNormalizedFirstCharFromHotel(h);
-
     let groupMatch = false;
-    if (['あ','か','さ','た','な','は','ま','や','ら','わ'].includes(group)) {
+    if (kana.includes(group)) {
       groupMatch = isCharInRow(firstChar, group);
     } else {
-      const map = {
-        'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO',
-        'PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ'
-      };
+      const map = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
       const set = map[group] || '';
       groupMatch = set.includes(firstChar);
     }
-
-    const keywordMatch = (h.keywords || '').includes(keyword);
-
-    return groupMatch && keywordMatch;
+    return groupMatch && (h.keywords || '').includes(keyword);
   });
-  
-  // ★修正②: 1件の場合は即座に拡大モーダルを表示
   if (matches.length === 1) {
     enlargeCard(matches[0]);
     return;
   }
-  
   render(matches);
 }
 
@@ -759,16 +730,7 @@ function closeOverlay() {
   document.getElementById('overlay').style.display = 'none';
 }
 
-document.addEventListener('click', function(e) {
-  if (e.target.matches('[data-g]')) {
-    showInitials(e.target.getAttribute('data-g'));
-  }
-  if (e.target.matches('[data-brand]')) {
-    searchByBrand(e.target.getAttribute('data-brand'));
-  }
-});
-
-function enlargeCard(h){
+function enlargeCard(h) {
   const modal = document.getElementById('modal');
   const content = document.getElementById('modal-content');
   content.innerHTML = `
@@ -778,165 +740,132 @@ function enlargeCard(h){
     <p>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a></p>
     <p>🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></p>
   `;
-  // 右下に角丸黒枠の閉じるボタンを追加
-  const existingBtn = content.querySelector('.close-btn-corner');
-  if(existingBtn) existingBtn.remove();
+  const existing = content.querySelector('.close-btn-corner');
+  if (existing) existing.remove();
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '閉じる';
   closeBtn.className = 'close-btn-corner';
-  closeBtn.onclick = function() {
-    closeModal();
-  };
+  closeBtn.onclick = () => closeModal();
   content.appendChild(closeBtn);
   modal.style.display = 'flex';
 }
-function closeModal(){
+function closeModal() {
   document.getElementById('modal').style.display = 'none';
 }
 
-document.getElementById('qrBtn').addEventListener('click',()=>{
-  const url=location.origin+location.pathname;
-  new QRious({element:document.getElementById('qrCanvas'),value:url,size:180});
-  document.getElementById('qrModal').style.display='flex';
+// イベント委譲
+document.addEventListener('click', e => {
+  if (e.target.matches('[data-g]')) showInitials(e.target.getAttribute('data-g'));
+  if (e.target.matches('[data-brand]')) searchByBrand(e.target.getAttribute('data-brand'));
 });
-function closeQR(){document.getElementById('qrModal').style.display='none';}
 
+// QRコード
+document.getElementById('qrBtn').addEventListener('click', () => {
+  const url = location.origin + location.pathname;
+  new QRious({ element: document.getElementById('qrCanvas'), value: url, size: 180 });
+  document.getElementById('qrModal').style.display = 'flex';
+});
+function closeQR() { document.getElementById('qrModal').style.display = 'none'; }
+
+// ニュース取得
 async function loadNewsFromJSON() {
   try {
     const r = await fetch('data/news.json?t=' + Date.now());
-    if (!r.ok) throw new Error('News file not found');
+    if (!r.ok) throw new Error();
     const news = await r.json();
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasUrlParams = urlParams.has('news1') || urlParams.has('news2') || urlParams.has('news3');
-    
-    if (!hasUrlParams) {
-      const newsItems = [news.news1, news.news2, news.news3].filter(Boolean);
-      document.getElementById('marqueeAll').textContent = newsItems.join(' ／ ') || '　';
-      console.log('news.jsonから読み込み:', newsItems);
+    const hasParams = [...new URLSearchParams(location.search).keys()].some(k => k.startsWith('news'));
+    if (!hasParams) {
+      const items = [news.news1, news.news2, news.news3].filter(Boolean);
+      document.getElementById('marqueeAll').textContent = items.join(' ／ ') || '　';
     }
-  } catch(e) {
-    console.log('news.json読み込みエラー:', e);
-    if (!document.getElementById('marqueeAll').textContent) {
-      applyNews();
-    }
+  } catch (e) {
+    applyNews();
   }
 }
-
-function applyNews(){
-  const p=new URLSearchParams(location.search);
-  const joined=[p.get('news1'),p.get('news2'),p.get('news3')]
-    .filter(Boolean).map(decodeURIComponent).join(' ／ ');
-  document.getElementById('marqueeAll').textContent=joined||'　';
+function applyNews() {
+  const p = new URLSearchParams(location.search);
+  const joined = [p.get('news1'), p.get('news2'), p.get('news3')].filter(Boolean).map(decodeURIComponent).join(' ／ ');
+  document.getElementById('marqueeAll').textContent = joined || '　';
 }
 
-let speedWatchID=null;
-document.getElementById('speedBtn').addEventListener('click',()=>{
-  if(speedWatchID){
+// 速度表示
+let speedWatchID = null;
+document.getElementById('speedBtn').addEventListener('click', () => {
+  if (speedWatchID) {
     navigator.geolocation.clearWatch(speedWatchID);
-    speedWatchID=null;
-    document.getElementById('speedArea').innerHTML='';
+    speedWatchID = null;
+    document.getElementById('speedArea').innerHTML = '';
     return;
   }
-  if(!navigator.geolocation){
-    alert('この端末では速度を取得できません');
-    return;
-  }
-  speedWatchID=navigator.geolocation.watchPosition(showSpeed,()=>alert('位置情報の取得を許可してください'),{enableHighAccuracy:true});
+  if (!navigator.geolocation) return alert('位置情報を取得できません');
+  speedWatchID = navigator.geolocation.watchPosition(pos => {
+    const kmh = (pos.coords.speed || 0) * 3.6;
+    document.getElementById('speedArea').innerHTML = `<span style="font-size:${kmh>=65?'80px':kmh>=63?'60px':'40px'};color:${kmh>65?'red':kmh>=63?'yellow':'white'};">${kmh.toFixed(1)} km/h</span>`;
+  }, () => alert('位置情報を許可してください'), { enableHighAccuracy: true });
 });
-function showSpeed(pos){
-  const spd=pos.coords.speed;
-  const kmh=(spd||0)*3.6;
-  const el=document.getElementById('speedArea');
-  let color='white',size='40px';
-  if(kmh>=63&&kmh<=65){color='yellow';size='60px';}
-  else if(kmh>65){color='red';size='80px';}
-  el.innerHTML=`<span style="font-size:${size};color:${color};">${kmh.toFixed(1)} km/h</span>`;
-}
 
+// RSS (NHK)
 const RSS_URL = "https://www.nhk.or.jp/rss/news/cat0.xml";
-
 async function fetchRSS() {
-  const newsContent = document.getElementById("newsContent");
-  
-  const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://cors-anywhere.herokuapp.com/'
-  ];
-  
-  for (const proxyUrl of proxies) {
+  const newsDiv = document.getElementById("newsContent");
+  const proxies = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?', 'https://cors-anywhere.herokuapp.com/'];
+  for (const proxy of proxies) {
     try {
-      console.log(`プロキシ試行: ${proxyUrl}`);
-      const response = await fetch(proxyUrl + encodeURIComponent(RSS_URL), {
-        timeout: 5000
-      });
-      
-      if (!response.ok) continue;
-      
-      const text = await response.text();
+      const res = await fetch(proxy + encodeURIComponent(RSS_URL), { timeout: 5000 });
+      if (!res.ok) continue;
+      const text = await res.text();
       if (!text || text.length < 100) continue;
-      
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(text, "text/xml");
-      
-      const parserError = xml.querySelector('parsererror');
-      if (parserError) continue;
-      
+      const xml = new DOMParser().parseFromString(text, "text/xml");
+      if (xml.querySelector('parsererror')) continue;
       const items = xml.querySelectorAll("item");
-      if (items.length === 0) continue;
-      
-      const news = Array.from(items).slice(0, 5).map(item => {
-        const title = item.querySelector("title")?.textContent || "タイトルなし";
-        const link = item.querySelector("link")?.textContent || "#";
-        return { title, link };
-      });
-
-      newsContent.innerHTML = '';
+      if (!items.length) continue;
+      const news = Array.from(items).slice(0,5).map(item => ({ title: item.querySelector("title")?.textContent || "タイトルなし", link: item.querySelector("link")?.textContent || "#" }));
+      newsDiv.innerHTML = '';
       news.forEach((n, i) => {
         const prefix = i === 0 ? '🚨' : '📻';
-        const el = document.createElement("span");
-        el.innerHTML = `${prefix} <a href="${n.link}" target="_blank" style="color:#ffa500;text-decoration:none;border-bottom:1px dotted #ffa500;">${n.title}</a>`;
-        newsContent.appendChild(el);
+        const span = document.createElement("span");
+        span.innerHTML = `${prefix} <a href="${n.link}" target="_blank" style="color:#ffa500;text-decoration:none;border-bottom:1px dotted #ffa500;">${n.title}</a>`;
+        newsDiv.appendChild(span);
         if (i < news.length - 1) {
           const sep = document.createElement("span");
           sep.textContent = " ● ";
           sep.style.color = "#ff4444";
-          newsContent.appendChild(sep);
+          newsDiv.appendChild(sep);
         }
       });
-
       document.getElementById("updateTime").textContent = `更新: ${new Date().toLocaleTimeString()}`;
-      console.log(`ニュース取得成功 (${proxyUrl})`);
       return;
-      
-    } catch (e) {
-      console.log(`プロキシ失敗 (${proxyUrl}):`, e);
-    }
+    } catch(e) {}
   }
-  
-  newsContent.innerHTML = '<span class="news-error">📻 ニュース取得に失敗しました</span>';
-  console.error('すべてのプロキシが失敗しました');
+  newsDiv.innerHTML = '<span class="news-error">📻 ニュース取得に失敗しました</span>';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const news1 = urlParams.get('news1');
-  const news2 = urlParams.get('news2');
-  const news3 = urlParams.get('news3');
-  
-  if (news1 || news2 || news3) {
-    console.log('プレビューモード: URLパラメータから新着情報を読み込み');
-    const marqueeEl = document.getElementById('marqueeAll');
-    const newsItems = [news1, news2, news3].filter(Boolean);
-    marqueeEl.textContent = newsItems.join(' ／ ') || '　';
-    fetchRSS();
+// ホーム追加ボタン
+let installPromptEvent = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installPromptEvent = e;
+});
+document.getElementById('addHome').addEventListener('click', () => {
+  if (installPromptEvent) {
+    installPromptEvent.prompt();
+    installPromptEvent.userChoice.then(() => installPromptEvent = null);
+  } else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+    alert('Safariの共有メニューから「ホーム画面に追加」を選んでください。');
   } else {
-    console.log('通常モード: news.jsonから新着情報を読み込み');
-    loadNewsFromJSON();
-    fetchRSS();
+    alert('ブラウザのメニューから「ホーム画面に追加」を選んでください。');
   }
-  
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadCSV();
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.has('news1') || urlParams.has('news2') || urlParams.has('news3')) {
+    applyNews();
+  } else {
+    loadNewsFromJSON();
+  }
+  fetchRSS();
   setInterval(fetchRSS, 1800000);
 });
 </script>
