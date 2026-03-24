@@ -127,24 +127,36 @@ a[href^="mailto"] {
       overflow: hidden !important;
       text-overflow: ellipsis !important;
     }
-    /* カラム幅固定 */
-    .print-table th:first-child,
-    .print-table td:first-child {
-      width: 40px !important;
-      max-width: 40px !important;
-    }
-    .print-table th:nth-child(2),
-    .print-table td:nth-child(2) {
-      width: 30%;
-    }
-    .print-table th:nth-child(3),
-    .print-table td:nth-child(3) {
-      width: 35%;
-    }
-    .print-table th:nth-child(4),
-    .print-table td:nth-child(4) {
-      width: 35%;
-    }
+    /* カラム幅固定（実用最適版） */
+.print-table th:first-child,
+.print-table td:first-child {
+  width: 32px !important;   /* No（3桁想定） */
+  max-width: 32px !important;
+}
+
+/* 頭文字 */
+.print-table th:nth-child(2),
+.print-table td:nth-child(2) {
+  width: 36px;              /* 1〜2文字で十分 */
+}
+
+/* ホテル名 */
+.print-table th:nth-child(3),
+.print-table td:nth-child(3) {
+  width: 30%;
+}
+
+/* 住所 */
+.print-table th:nth-child(4),
+.print-table td:nth-child(4) {
+  width: 40%;
+}
+
+/* 備考 */
+.print-table th:nth-child(5),
+.print-table td:nth-child(5) {
+  width: 30%;
+}
     .print-table th {
       background: #f0f0f0 !important;
       -webkit-print-color-adjust: exact;
@@ -380,30 +392,33 @@ async function generateOptimizedPages() {
   }
 
   function buildTableHTML(rows, isFirstPage) {
-    let html = `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
-    if (isFirstPage) {
-      html += `<thead>`;
-      html += `<tr>`;
-      if (opt.showInitial) html += `<th>頭文字</th>`;
-      if (opt.showName) html += `<th>ホテル名</th>`;
-      if (opt.showAddress) html += `<th>住所</th>`;
-      if (opt.showNote) html += `<th>備考</th>`;
-      html += `</tr>`;
-      html += `</thead>`;
-    }
-    html += `<tbody>`;
-    for(let h of rows) {
-      html += `<tr>`;
-      if (opt.showInitial) html += `<td>${escapeHtml(h.initial||'')}</td>`;
-      if (opt.showName) html += `<td>${escapeHtml(h.name||'')}</td>`;
-      if (opt.showAddress) html += `<td>${escapeHtml(h.address||'')}</td>`;
-      if (opt.showNote) html += `<td>${escapeHtml(h.note||'')}</td>`;
-      html += `</tr>`;
-    }
-    html += `</tbody>`;
-    html += `</table>`;
-    return html;
-  }
+  let html = `<table class="print-table">`;
+
+  // ===== ヘッダー（固定5列）=====
+  html += `<thead><tr>`;
+  html += `<th>No.</th>`;
+  html += `<th>頭文字</th>`;
+  html += `<th>ホテル名</th>`;
+  html += `<th>住所</th>`;
+  html += `<th>備考</th>`;
+  html += `</tr></thead>`;
+
+  // ===== 本文 =====
+  html += `<tbody>`;
+
+  rows.forEach((row, i) => {
+    html += `<tr>`;
+    html += `<td>${i + 1}</td>`;
+    html += `<td>${opt.showInitial ? row.initial : ''}</td>`;
+    html += `<td>${opt.showName ? row.name : ''}</td>`;
+    html += `<td>${opt.showAddress ? row.address : ''}</td>`;
+    html += `<td>${opt.showNote ? row.note : ''}</td>`;
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  return html;
+}
 
   // 【修正箇所】1ページ目:20行、2ページ目以降:37行 (manual_entry_form (7).html 準拠)
   const FIRST_PAGE_ROWS = 20;
