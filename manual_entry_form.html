@@ -334,7 +334,7 @@ function closePrintModal() { document.getElementById('printModal').style.display
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
 
 // ========== 行数固定分割ロジック（安定最優先） ==========
-// 【修正】1ページ目:26行、2ページ目以降:38行に変更
+// 【修正】1ページ目:20行、2ページ目以降:37行に変更 (manual_entry_form (7).html の仕様に合わせる)
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
@@ -383,21 +383,17 @@ async function generateOptimizedPages() {
     let html = `<table class="print-table" style="width:100%;font-size:${opt.bodyFontSize};border-collapse:collapse;">`;
     if (isFirstPage) {
       html += `<thead>`;
-      html += `®<th style="background:#f0f0f0;">No.</th>`;
-      if (opt.showInitial) html += `<th style="background:#f0f0f0;">頭文字</th>`;
-      if (opt.showName) html += `<th style="background:#f0f0f0;">ホテル名</th>`;
-      if (opt.showAddress) html += `<th style="background:#f0f0f0;">住所</th>`;
-      if (opt.showNote) html += `<th style="background:#f0f0f0;">備考</th>`;
+      html += `<tr>`;
+      if (opt.showInitial) html += `<th>頭文字</th>`;
+      if (opt.showName) html += `<th>ホテル名</th>`;
+      if (opt.showAddress) html += `<th>住所</th>`;
+      if (opt.showNote) html += `<th>備考</th>`;
       html += `</tr>`;
       html += `</thead>`;
     }
     html += `<tbody>`;
-    let rowNumStart = isFirstPage ? 1 : 0;
-    for(let idx = 0; idx < rows.length; idx++) {
-      let h = rows[idx];
-      let displayNum = isFirstPage ? (idx+1) : '';
-      html += `®`;
-      html += `<td style="text-align:center;">${displayNum}</td>`;
+    for(let h of rows) {
+      html += `<tr>`;
       if (opt.showInitial) html += `<td>${escapeHtml(h.initial||'')}</td>`;
       if (opt.showName) html += `<td>${escapeHtml(h.name||'')}</td>`;
       if (opt.showAddress) html += `<td>${escapeHtml(h.address||'')}</td>`;
@@ -409,7 +405,7 @@ async function generateOptimizedPages() {
     return html;
   }
 
-  // 【修正箇所】1ページ目:26行、2ページ目以降:38行
+  // 【修正箇所】1ページ目:20行、2ページ目以降:37行 (manual_entry_form (7).html 準拠)
   const FIRST_PAGE_ROWS = 20;
   const OTHER_PAGE_ROWS = 37;
 
@@ -453,7 +449,7 @@ async function refreshFullPreview() {
   let pageDetails = [];
   let start = 0;
   let pageIdx = 0;
-  // 【修正箇所】プレビュー情報表示用の行数も26/38に合わせる
+  // 【修正箇所】プレビュー情報表示用の行数も20/37に合わせる
   const FIRST_PAGE_ROWS = 20;
   const OTHER_PAGE_ROWS = 37;
   while (start < DATA_ALL.length) {
@@ -485,4 +481,3 @@ async function saveFileToGitHub(token, path, content, message) { let api = 'http
 </script>
 </body>
 </html>
-
