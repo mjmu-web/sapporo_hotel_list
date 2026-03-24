@@ -28,6 +28,10 @@ a {
   text-decoration: none !important;
 }
 
+a:visited {
+  color: inherit !important;
+}
+
 /* 電話番号・メールアドレスのリンク化を無効化 */
 a[href^="tel"],
 a[href^="mailto"] {
@@ -72,7 +76,7 @@ a[href^="mailto"] {
   animation-play-state: paused;
 }
 
-/* ===== 修正: 新着情報ティッカーのスタイル ===== */
+/* 新着情報ティッカーのスタイル */
 #newsLine {
   margin: 4px auto 10px;
   text-align: center;
@@ -102,7 +106,6 @@ a[href^="mailto"] {
 #newsTicker:hover #marqueeAll {
   animation-play-state: paused;
 }
-/* ===== 修正ここまで ===== */
 
 /* 更新時間とスリープ防止バー */
 #infoBar {
@@ -149,7 +152,7 @@ h1 {
   text-align: center;
 }
 
-/* トップボタン群（☁️ ⚾️ 等） */
+/* トップボタン群 */
 #topBtns {
   display: flex;
   justify-content: center;
@@ -257,6 +260,16 @@ h1 {
   font-weight: 700;
   font-size: 1.1em;
   margin-bottom: 4px;
+}
+/* iOSの自動リンク対策 - 住所表示部分に適用 */
+.address-text {
+  color: #000;
+  -webkit-touch-callout: none;
+}
+/* iOSが自動生成するリンクを非表示化 */
+.apple-data-detectors {
+  display: none !important;
+  color: #000 !important;
 }
 
 /* 速度表示エリア */
@@ -386,6 +399,10 @@ h1 {
 #modal-content a:active {
   opacity: 0.7;
 }
+/* モーダル内の住所も黒く */
+#modal-content p {
+  color: #000;
+}
 
 /* 共通の閉じるボタン（右下・角丸黒枠） */
 .close-btn-corner {
@@ -504,6 +521,50 @@ h1 {
 
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script>
+// ==================== iOS自動リンク対策関数 ====================
+function disableIOSDataDetectors() {
+  // すべての要素からiOSが自動生成するリンクを除去
+  const allElements = document.querySelectorAll('*');
+  allElements.forEach(el => {
+    // iOSのデータ検出器が作ったリンクを無効化
+    if (el.tagName === 'A' && el.getAttribute('x-apple-data-detectors')) {
+      const parent = el.parentNode;
+      const text = el.textContent;
+      const span = document.createElement('span');
+      span.textContent = text;
+      span.className = 'address-text';
+      span.setAttribute('x-apple-data-detectors', 'false');
+      parent.replaceChild(span, el);
+    }
+    // 属性を付与して自動リンク化を抑制
+    if (el.hasAttribute('x-apple-data-detectors')) {
+      el.setAttribute('x-apple-data-detectors', 'false');
+    }
+    // 住所が含まれる可能性のある要素に属性追加
+    if (el.textContent && (el.textContent.includes('北海道') || el.textContent.includes('札幌'))) {
+      el.setAttribute('x-apple-data-detectors', 'false');
+    }
+  });
+  
+  // MutationObserverで動的に追加される要素も監視
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      mutation.addedNodes.forEach(function(node) {
+        if (node.nodeType === 1) {
+          if (node.textContent && (node.textContent.includes('北海道') || node.textContent.includes('札幌'))) {
+            node.setAttribute('x-apple-data-detectors', 'false');
+          }
+          const links = node.querySelectorAll ? node.querySelectorAll('[x-apple-data-detectors]') : [];
+          links.forEach(link => {
+            link.setAttribute('x-apple-data-detectors', 'false');
+          });
+        }
+      });
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 // ==================== スリープ防止機能 ====================
 let wakeLock = null;
 const wakeLockIndicator = document.getElementById('wakeLockIndicator');
@@ -636,13 +697,18 @@ function render(list) {
   }
   el.innerHTML = list.map(h => {
     const safeHotel = JSON.stringify(h).replace(/'/g, "\\'");
+    // 住所にiOS自動リンク対策の属性とクラスを付与
+    const addressEscaped = h.address.replace(/'/g, "\\'");
     return `<div class='card' onclick='enlargeCard(${safeHotel})'>
       <div class='name'>${h.name}</div>
-      <div>📍 ${h.address}</div>
+      <div class='address-text' x-apple-data-detectors='false'>📍 ${h.address}</div>
       ${h.note ? '<div>📝 ' + h.note + '</div>' : ''}
       <div>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a> ｜ 🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></div>
     </div>`;
   }).join('');
+  
+  // レンダリング後にiOS自動リンク対策を再度実行
+  setTimeout(disableIOSDataDetectors, 10);
 }
 
 function isCharInRow(char, rowType) {
@@ -771,7 +837,7 @@ function enlargeCard(h) {
   const content = document.getElementById('modal-content');
   content.innerHTML = `
     <h2>${h.name}</h2>
-    <p>📍 ${h.address}</p>
+    <p x-apple-data-detectors='false' class='address-text'>📍 ${h.address}</p>
     ${h.note ? '<p>📝 ' + h.note + '</p>' : ''}
     <p>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a></p>
     <p>🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></p>
@@ -909,6 +975,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   fetchRSS();
   setInterval(fetchRSS, 1800000);
+  
+  // iOS自動リンク対策を実行
+  setTimeout(disableIOSDataDetectors, 100);
 });
 </script>
 </body>
