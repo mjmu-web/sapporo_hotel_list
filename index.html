@@ -136,12 +136,12 @@ a[href^="mailto"] {
 }
 
 /* 共通ボタンスタイル（金属調） */
+
 .metal-round-lg, .metal-round, .metal-small, .long, .hotel-btn {
   cursor: pointer;
   transition: transform 0.05s linear;
-}
-.metal-round-lg:active, .metal-round:active, .metal-small:active, .long:active, .hotel-btn:active {
-  transform: scale(0.96);
+  color: #000;
+  -webkit-text-fill-color: #000;
 }
 
 /* 見出し */
@@ -356,11 +356,9 @@ h1 {
   border: 1px solid #999;
   background: #e8e8e8;
   cursor: pointer;
+  color: #000;
+  -webkit-text-fill-color: #000;
 }
-#overlay-content button:active {
-  background: #d0d0d0;
-}
-
 /* モーダル（ホテル詳細） */
 #modal {
   position: fixed;
