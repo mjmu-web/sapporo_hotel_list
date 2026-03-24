@@ -681,10 +681,12 @@ async function loadCSV() {
   render(DATA_ALL);
 }
 
-function mapLink(name) {
+function mapLink(name, address) {
   const ua = navigator.userAgent.toLowerCase();
-  const q = encodeURIComponent(name);
-  return /iphone|ipad|ipod/.test(ua) ? `maps://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
+  const q = encodeURIComponent((name || '') + ' ' + (address || ''));
+  return /iphone|ipad|ipod/.test(ua)
+    ? `maps://maps.apple.com/?q=${q}`
+    : `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
 function render(list) {
@@ -701,7 +703,7 @@ function render(list) {
       <div class='name'>${h.name}</div>
       <div class='address-text' x-apple-data-detectors='false'>📍 ${h.address}</div>
       ${h.note ? '<div>📝 ' + h.note + '</div>' : ''}
-      <div>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a> ｜ 🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></div>
+      <div>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a> ｜ 🗺️ <a href='${mapLink(h.name, h.address)}' target='_blank'>地図</a></div>
     </div>`;
   }).join('');
   
@@ -838,7 +840,7 @@ function enlargeCard(h) {
     <p x-apple-data-detectors='false' class='address-text'>📍 ${h.address}</p>
     ${h.note ? '<p>📝 ' + h.note + '</p>' : ''}
     <p>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a></p>
-    <p>🗺️ <a href='${mapLink(h.name)}' target='_blank'>地図</a></p>
+    <p>🗺️ <a href='${mapLink(h.name, h.address)}' target='_blank'>地図</a></p>
   `;
   const existing = content.querySelector('.close-btn-corner');
   if (existing) existing.remove();
