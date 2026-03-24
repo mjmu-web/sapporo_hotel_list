@@ -72,6 +72,38 @@ a[href^="mailto"] {
   animation-play-state: paused;
 }
 
+/* ===== 修正: 新着情報ティッカーのスタイル ===== */
+#newsLine {
+  margin: 4px auto 10px;
+  text-align: center;
+}
+#newsTicker {
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255,255,255,.35);
+  border-bottom: 1px solid rgba(0,0,0,.25);
+  padding: 6px 0;
+  background: rgba(0,0,0,0.05);
+}
+#marqueeAll {
+  display: inline-block;
+  padding-left: 100%;
+  animation: tickerScroll 30s linear infinite;
+  font-weight: 700;
+  font-size: 1.05em;
+  color: #222;
+  white-space: nowrap;
+}
+@keyframes tickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+#newsTicker:hover #marqueeAll {
+  animation-play-state: paused;
+}
+/* ===== 修正ここまで ===== */
+
 /* 更新時間とスリープ防止バー */
 #infoBar {
   display: flex;
@@ -425,7 +457,11 @@ h1 {
 </div>
 
 <!-- 固定ニュースティッカー（新着情報） -->
-<div id="newsLine"><div id="newsTicker"><span id="marqueeAll"></span></div></div>
+<div id="newsLine">
+  <div id="newsTicker">
+    <span id="marqueeAll">📢 新着情報を読み込み中...</span>
+  </div>
+</div>
 <div id="speedArea"></div>
 
 <!-- 50音ボタン -->
@@ -767,7 +803,7 @@ document.getElementById('qrBtn').addEventListener('click', () => {
 });
 function closeQR() { document.getElementById('qrModal').style.display = 'none'; }
 
-// ニュース取得
+// ニュース取得（新着情報ティッカー用）
 async function loadNewsFromJSON() {
   try {
     const r = await fetch('data/news.json?t=' + Date.now());
@@ -776,7 +812,12 @@ async function loadNewsFromJSON() {
     const hasParams = [...new URLSearchParams(location.search).keys()].some(k => k.startsWith('news'));
     if (!hasParams) {
       const items = [news.news1, news.news2, news.news3].filter(Boolean);
-      document.getElementById('marqueeAll').textContent = items.join(' ／ ') || '　';
+      const marqueeEl = document.getElementById('marqueeAll');
+      if (items.length > 0) {
+        marqueeEl.textContent = items.join(' ／ ');
+      } else {
+        marqueeEl.textContent = '📢 新着情報はありません';
+      }
     }
   } catch (e) {
     applyNews();
@@ -785,7 +826,8 @@ async function loadNewsFromJSON() {
 function applyNews() {
   const p = new URLSearchParams(location.search);
   const joined = [p.get('news1'), p.get('news2'), p.get('news3')].filter(Boolean).map(decodeURIComponent).join(' ／ ');
-  document.getElementById('marqueeAll').textContent = joined || '　';
+  const marqueeEl = document.getElementById('marqueeAll');
+  marqueeEl.textContent = joined || '📢 新着情報はありません';
 }
 
 // 速度表示
@@ -804,7 +846,7 @@ document.getElementById('speedBtn').addEventListener('click', () => {
   }, () => alert('位置情報を許可してください'), { enableHighAccuracy: true });
 });
 
-// RSS (NHK)
+// RSS (NHK) - 上部横断幕用
 const RSS_URL = "https://www.nhk.or.jp/rss/news/cat0.xml";
 async function fetchRSS() {
   const newsDiv = document.getElementById("newsContent");
