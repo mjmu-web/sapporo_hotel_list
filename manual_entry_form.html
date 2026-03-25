@@ -89,10 +89,10 @@ a[href^="mailto"] {
   .qr-preview{text-align:center;margin-top:5px}
   .qr-preview img{border:1px solid #ccc;padding:4px;background:#fff;max-width:60px}
   
-  /* 印刷用スタイル (manual_entry_form (5).html から継承、微調整) */
+  /* 印刷用スタイル（最適化版：行数最大化） */
   @page {
     size: A4 landscape;
-    margin: 15mm;
+    margin: 10mm 8mm 10mm 8mm; /* 上下余白を最小化 */
   }
   @media print {
     body * { visibility: hidden !important; }
@@ -111,56 +111,51 @@ a[href^="mailto"] {
       border-collapse: collapse;
       margin-bottom: 0;
       table-layout: fixed;
-      font-size: 8pt !important;
-      page-break-inside: auto;
+      font-size: 9pt !important;
+      line-height: 1.2 !important;
     }
     .print-table th, .print-table td {
       border: 1px solid black !important;
       background: white !important;
       color: black !important;
+      padding: 1px 3px !important;
+      vertical-align: middle !important;
     }
     .print-table td {
-      padding: 0 !important;
-      height: 16px !important;
-      line-height: 16px !important;
+      height: auto !important;
+      line-height: 1.2 !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
     }
     /* カラム幅固定（実用最適版） */
-.print-table th:first-child,
-.print-table td:first-child {
-  width: 32px !important;   /* No（3桁想定） */
-  max-width: 32px !important;
-}
-
-/* 頭文字 */
-.print-table th:nth-child(2),
-.print-table td:nth-child(2) {
-  width: 36px;              /* 1〜2文字で十分 */
-}
-
-/* ホテル名 */
-.print-table th:nth-child(3),
-.print-table td:nth-child(3) {
-  width: 30%;
-}
-
-/* 住所 */
-.print-table th:nth-child(4),
-.print-table td:nth-child(4) {
-  width: 40%;
-}
-
-/* 備考 */
-.print-table th:nth-child(5),
-.print-table td:nth-child(5) {
-  width: 30%;
-}
+    .print-table th:first-child,
+    .print-table td:first-child {
+      width: 32px !important;
+      max-width: 32px !important;
+    }
+    .print-table th:nth-child(2),
+    .print-table td:nth-child(2) {
+      width: 36px;
+    }
+    .print-table th:nth-child(3),
+    .print-table td:nth-child(3) {
+      width: 30%;
+    }
+    .print-table th:nth-child(4),
+    .print-table td:nth-child(4) {
+      width: 40%;
+    }
+    .print-table th:nth-child(5),
+    .print-table td:nth-child(5) {
+      width: 30%;
+    }
     .print-table th {
       background: #f0f0f0 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 9pt !important;
+      padding: 1px 3px !important;
     }
     .print-page {
       break-after: page;
@@ -170,17 +165,28 @@ a[href^="mailto"] {
     }
     .print-news-box {
       background: #f0f8f0 !important;
-      padding: 8px;
-      margin: 10px 0;
+      padding: 3px 5px !important;
+      margin: 4px 0 !important;
       border: 1px solid #8ab3a0;
       border-radius: 4px;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      font-size: 8pt !important;
+      line-height: 1.2 !important;
     }
     .print-page-num {
       text-align: center;
       font-size: 8pt;
-      margin-top: 10px;
+      margin-top: 3px;
+    }
+    /* タイトル部分の余白削減 */
+    .print-title-area {
+      margin-bottom: 3px !important;
+    }
+    .print-title {
+      font-size: 18pt !important;
+      margin: 0 0 3px 0 !important;
+      line-height: 1.2 !important;
     }
   }
   #printArea { display: none; }
@@ -275,7 +281,7 @@ a[href^="mailto"] {
               <span>実際の分割:</span>
               <span id="autoRowsInfo" style="color:#357; font-weight:bold;">-</span>
             </div>
-            <div class="setting-row"><span>本文フォント:</span><select id="bodyFontSize"><option value="8pt">小 (8pt)</option><option value="10pt" selected>中 (10pt)</option><option value="12pt">大 (12pt)</option></select></div>
+            <div class="setting-row"><span>本文フォント:</span><select id="bodyFontSize"><option value="8pt">小 (8pt)</option><option value="9pt" selected>中 (9pt)</option><option value="10pt">大 (10pt)</option></select></div>
           </div>
         </div>
         <div class="preview-container"><div class="preview-header"><span>🔍 全ページプレビュー（行数固定分割）</span><button onclick="refreshFullPreview()">🔄 更新</button></div><div id="fullPreviewArea" class="preview-area"></div></div>
@@ -286,7 +292,7 @@ a[href^="mailto"] {
   <div id="printArea"></div>
 
 <script>
-// ==================== グローバル変数 (manual_entry_form (5).html から継承) ====================
+// ==================== グローバル変数 ====================
 const GH_OWNER = "mjmu-web";
 const GH_REPO  = "sapporo_hotel_list";
 const CSV_PATH = "data/hotels.csv";
@@ -345,8 +351,10 @@ function openPrintModal() { document.getElementById('printModal').style.display 
 function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
 
-// ========== 行数固定分割ロジック（安定最優先） ==========
-// 【修正】1ページ目:20行、2ページ目以降:37行に変更 (manual_entry_form (7).html の仕様に合わせる)
+// ========== 行数固定分割ロジック（最適化版：1ページ目30行、2ページ目以降39行）==========
+// 1行あたりの高さ: 約4.8mm（9pt, line-height 1.2, padding上下2px）
+// 有効印刷高さ: 297mm - 上下余白20mm = 277mm
+// タイトル+新着情報: 約22mm → 残り255mm ÷ 4.8mm ≒ 53行（実用上45行で安全）
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
@@ -379,50 +387,40 @@ async function generateOptimizedPages() {
   function buildHeaderHTML() {
     let html = '';
     if (opt.includeQR && opt.qrWithTitle && qrDataURL) {
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:${opt.titleSize};font-weight:bold;">${escapeHtml(opt.title)}</div><img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:block;"></div>`;
+      html += `<div class="print-title-area" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><div class="print-title" style="font-size:${opt.titleSize};font-weight:bold;margin:0;">${escapeHtml(opt.title)}</div><img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:block;"></div>`;
     } else if (opt.includeQR && qrDataURL) {
-      html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:8px;">${escapeHtml(opt.title)}</div><div style="text-align:center;margin-bottom:12px;"><img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:inline-block;"></div>`;
+      html += `<div class="print-title" style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin:0 0 3px 0;">${escapeHtml(opt.title)}</div><div style="text-align:center;margin-bottom:4px;"><img src="${qrDataURL}" style="width:${opt.qrSize}px;height:${opt.qrSize}px;display:inline-block;"></div>`;
     } else {
-      html += `<div style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin-bottom:12px;">${escapeHtml(opt.title)}</div>`;
+      html += `<div class="print-title" style="font-size:${opt.titleSize};text-align:center;font-weight:bold;margin:0 0 3px 0;">${escapeHtml(opt.title)}</div>`;
     }
     if (opt.showNews && newsItems.length) {
-      html += `<div class="print-news-box" style="margin:10px 0;padding:8px;border:1px solid #8ab3a0;background:#f0f8f0;border-radius:4px;"><strong>📢 新着情報</strong><br>${newsItems.map((n,i)=> `${i+1}. ${escapeHtml(n)}`).join('<br>')}</div>`;
+      html += `<div class="print-news-box" style="margin:3px 0 4px 0;padding:3px 5px;border:1px solid #8ab3a0;background:#f0f8f0;border-radius:4px;"><strong>📢 新着情報</strong><br>${newsItems.map((n,i)=> `${i+1}. ${escapeHtml(n)}`).join('<br>')}</div>`;
     }
     return html;
   }
 
   function buildTableHTML(rows, isFirstPage) {
-  let html = `<table class="print-table">`;
+    let html = `<table class="print-table">`;
+    html += `<thead><tr>`;
+    html += `<th>No.</th><th>頭文字</th><th>ホテル名</th><th>住所</th><th>備考</th>`;
+    html += `</tr></thead><tbody>`;
+    rows.forEach((row, i) => {
+      html += `<tr>`;
+      html += `<td>${i + 1}</td>`;
+      html += `<td>${opt.showInitial ? row.initial : ''}</td>`;
+      html += `<td>${opt.showName ? row.name : ''}</td>`;
+      html += `<td>${opt.showAddress ? row.address : ''}</td>`;
+      html += `<td>${opt.showNote ? row.note : ''}</td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+    return html;
+  }
 
-  // ===== ヘッダー（固定5列）=====
-  html += `<thead><tr>`;
-  html += `<th>No.</th>`;
-  html += `<th>頭文字</th>`;
-  html += `<th>ホテル名</th>`;
-  html += `<th>住所</th>`;
-  html += `<th>備考</th>`;
-  html += `</tr></thead>`;
-
-  // ===== 本文 =====
-  html += `<tbody>`;
-
-  rows.forEach((row, i) => {
-    html += `<tr>`;
-    html += `<td>${i + 1}</td>`;
-    html += `<td>${opt.showInitial ? row.initial : ''}</td>`;
-    html += `<td>${opt.showName ? row.name : ''}</td>`;
-    html += `<td>${opt.showAddress ? row.address : ''}</td>`;
-    html += `<td>${opt.showNote ? row.note : ''}</td>`;
-    html += `</tr>`;
-  });
-
-  html += `</tbody></table>`;
-  return html;
-}
-
-  // 【修正箇所】1ページ目:20行、2ページ目以降:37行 (manual_entry_form (7).html 準拠)
-  const FIRST_PAGE_ROWS = 20;
-  const OTHER_PAGE_ROWS = 37;
+  // 【最適化】行数設定: 1ページ目30行 / 2ページ目以降45行
+  // タイトル+新着情報で約8行分の高さを考慮し、1ページ目は30行で調整
+  const FIRST_PAGE_ROWS = 30;
+  const OTHER_PAGE_ROWS = 39;
 
   let pages = [];
   let start = 0;
@@ -464,9 +462,8 @@ async function refreshFullPreview() {
   let pageDetails = [];
   let start = 0;
   let pageIdx = 0;
-  // 【修正箇所】プレビュー情報表示用の行数も20/37に合わせる
-  const FIRST_PAGE_ROWS = 20;
-  const OTHER_PAGE_ROWS = 37;
+  const FIRST_PAGE_ROWS = 30;
+  const OTHER_PAGE_ROWS = 39;
   while (start < DATA_ALL.length) {
     let limit = pageIdx === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
     let end = Math.min(start + limit, DATA_ALL.length);
