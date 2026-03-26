@@ -194,7 +194,6 @@ a[href^="mailto"] {
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
-  <!-- 管理画面UI (manual_entry_form (5).html の構成を維持) -->
   <div class="panel no-print">
     <h2 class="section-title">新着情報</h2>
     <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
@@ -266,7 +265,6 @@ a[href^="mailto"] {
     <div class="hint">※ CSVインポート後は自動で全件置換 → 名前順に整列。GitHub保存でCSVと新着情報が同時更新。</div>
   </div>
 
-  <!-- 印刷モーダル -->
   <div id="printModal" class="modal no-print">
     <div class="modal-content">
       <div class="modal-header"><h3>🖨️ 印刷設定 & 全ページプレビュー（A4横）</h3><span class="modal-close" onclick="closePrintModal()">&times;</span></div>
@@ -306,6 +304,15 @@ let currentGroup = null;
 const KANA_RANGES = { 'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/, 'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/, 'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/, 'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/, 'な': /[なにぬねのナニヌネノ]/, 'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/, 'ま': /[まみむめもマミムメモ]/, 'や': /[やゆよゃゅょヤユヨ]/, 'ら': /[らりるれろラリルレロ]/, 'わ': /[わをんワヲン]/ };
 const ALPHA_GROUPS = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
 
+// --- データ正規化ロジック ---
+function normalizeName(name) {
+  return (name || '')
+    .replace(/^札幌\s*/, '')
+    .replace(/^ホテル\s*/, '')
+    .replace(/ホテル$/, '')
+    .trim();
+}
+
 init();
 async function init() {
   await loadCSV();
@@ -319,8 +326,41 @@ async function init() {
   updateForm();
 }
 
-async function loadCSV() { try { const r = await fetch(CSV_PATH + '?t=' + Date.now(), { cache: 'no-store' }); const txt = await r.text(); const lines = txt.trim().split(/\r?\n/).filter(Boolean); let start = (lines[0] || '').includes('頭文字') ? 1 : 0; DATA_ALL = lines.slice(start).map(l => { let p = l.split(','); return { initial: p[0] || '', name: p[1] || '', address: p[2] || '', note: p[3] || '' }; }); } catch(e) { DATA_ALL = []; } }
-function sortDataAll() { DATA_ALL.sort((a,b) => (a.name || '').localeCompare((b.name || ''), 'ja')); }
+async function loadCSV() { 
+  try { 
+    const r = await fetch(CSV_PATH + '?t=' + Date.now(), { cache: 'no-store' }); 
+    const txt = await r.text(); 
+    const lines = txt.trim().split(/\r?\n/).filter(Boolean); 
+    let start = (lines[0] || '').includes('頭文字') ? 1 : 0; 
+    DATA_ALL = lines.slice(start).map(l => { 
+      let p = l.split(','); 
+      let name = p[1] || '';
+      let initial = (p[0] || '').trim();
+      if (!initial) {
+        initial = normalizeName(name).charAt(0);
+      }
+      return {
+        initial: initial,
+        name: name,
+        address: p[2] || '',
+        note: p[3] || ''
+      };
+    }); 
+  } catch(e) { DATA_ALL = []; } 
+}
+function sortDataAll() {
+DATA_ALL.sort((a,b) => {
+const ia = (a.initial || '').trim();
+const ib = (b.initial || '').trim();
+
+if (ia !== ib) {
+  return ia.localeCompare(ib, 'ja');
+}
+
+return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
+
+});
+}
 function refreshAfterDataChange() { sortDataAll(); if(currentGroup) applyGroup(currentGroup); else { VIEW = DATA_ALL.slice(); viewIndex = Math.min(viewIndex, VIEW.length-1); if(viewIndex < 0 && VIEW.length > 0) viewIndex = 0; updateForm(); } }
 function loadNewsFromURL() { const params = new URLSearchParams(location.search); if (params.get('news1')) document.getElementById('n1').value = params.get('news1'); if (params.get('news2')) document.getElementById('n2').value = params.get('news2'); if (params.get('news3')) document.getElementById('n3').value = params.get('news3'); }
 async function loadNewsFromJSON() { const r = await fetch(NEWS_PATH + '?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const news = await r.json(); document.getElementById('n1').value = news.news1 || ''; document.getElementById('n2').value = news.news2 || ''; document.getElementById('n3').value = news.news3 || ''; } }
@@ -337,24 +377,106 @@ function bindUI() {
   const triggers = ['printTitle','titleFontSize','includeQR','qrWithTitle','qrSize','printInitial','printName','printAddress','printNote','printNews','printPageNumbers','bodyFontSize']; 
   triggers.forEach(id => { let el = document.getElementById(id); if(el) el.addEventListener('change', () => setTimeout(refreshFullPreview, 50)); }); 
 }
-function applyGroup(g) { currentGroup = g; if(KANA_RANGES[g]) { VIEW = DATA_ALL.filter(h => KANA_RANGES[g].test((h.name || '').replace(/^ホテル\s*/, '').charAt(0))); } else { let set = ALPHA_GROUPS[g] || ''; VIEW = DATA_ALL.filter(h => set.includes(((h.name || '').replace(/^ホテル\s*/, '').charAt(0) || '').toUpperCase())); } VIEW.sort((a,b) => (a.name || '').localeCompare((b.name || ''), 'ja')); viewIndex = 0; updateForm(); }
+function applyGroup(g) { currentGroup = g; if(KANA_RANGES[g]) { VIEW = DATA_ALL.filter(h => KANA_RANGES[g].test(normalizeName(h.name).charAt(0))); } else { let set = ALPHA_GROUPS[g] || ''; VIEW = DATA_ALL.filter(h => set.includes((normalizeName(h.name).charAt(0) || '').toUpperCase())); } VIEW.sort((a,b) => {
+const ia = (a.initial || '').trim();
+const ib = (b.initial || '').trim();
+
+if (ia !== ib) {
+return ia.localeCompare(ib, 'ja');
+}
+
+return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
+}); viewIndex = 0; updateForm(); }
 function updateForm() { let h = VIEW[viewIndex] || {}; document.getElementById('fInitial').value = h.initial || ''; document.getElementById('fName').value = h.name || ''; document.getElementById('fAddress').value = h.address || ''; document.getElementById('fNote').value = h.note || ''; document.getElementById('pos').textContent = VIEW.length > 0 ? viewIndex + 1 : 0; document.getElementById('len').textContent = VIEW.length; document.getElementById('btnPrev').disabled = viewIndex <= 0; document.getElementById('btnNext').disabled = viewIndex >= VIEW.length - 1; document.getElementById('btnDelete').disabled = VIEW.length === 0; }
 function move(delta) { viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta)); updateForm(); }
 function searchByName() { let q = document.getElementById('jumpHead').value.toLowerCase().trim(); if(!q) return; let idx = VIEW.findIndex(h => (h.name || '').toLowerCase().includes(q)); if(idx >= 0) { viewIndex = idx; updateForm(); } else alert('該当なし'); }
-function saveCurrentEdit() { if(VIEW.length === 0) return; let h = VIEW[viewIndex]; h.initial = document.getElementById('fInitial').value.trim(); h.name = document.getElementById('fName').value.trim(); h.address = document.getElementById('fAddress').value.trim(); h.note = document.getElementById('fNote').value.trim(); if(!h.name) { alert('ホテル名必須'); return; } refreshAfterDataChange(); let newIdx = VIEW.findIndex(hh => hh === h); viewIndex = newIdx >= 0 ? newIdx : 0; updateForm(); alert('保存しました'); }
-function addNewHotel() { let nh = { initial: document.getElementById('newInitial').value.trim(), name: document.getElementById('newName').value.trim(), address: document.getElementById('newAddress').value.trim(), note: document.getElementById('newNote').value.trim() }; if(!nh.name) { alert('ホテル名必須'); return; } DATA_ALL.push(nh); refreshAfterDataChange(); document.getElementById('newInitial').value = ''; document.getElementById('newName').value = ''; document.getElementById('newAddress').value = ''; document.getElementById('newNote').value = ''; viewIndex = VIEW.findIndex(h => h.name === nh.name && h.address === nh.address); if(viewIndex === -1) viewIndex = 0; updateForm(); alert('新規追加しました'); }
+function saveCurrentEdit() { 
+  if(VIEW.length === 0) return; 
+  let h = VIEW[viewIndex]; 
+  let initial = document.getElementById('fInitial').value.trim();
+  let name = document.getElementById('fName').value.trim();
+  
+  if(!name) { alert('ホテル名必須'); return; }
+  
+  if (!initial || initial === '') {
+    initial = normalizeName(name).charAt(0);
+  }
+  
+  h.initial = initial;
+  h.name = name;
+  h.address = document.getElementById('fAddress').value.trim();
+  h.note = document.getElementById('fNote').value.trim();
+  h.keywords = ''; // 廃止
+
+  refreshAfterDataChange(); 
+  let newIdx = VIEW.findIndex(hh => hh === h); 
+  viewIndex = newIdx >= 0 ? newIdx : 0; 
+  updateForm(); 
+  alert('保存しました'); 
+}
+function addNewHotel() { 
+  let initial = document.getElementById('newInitial').value.trim();
+  let name = document.getElementById('newName').value.trim();
+  
+  if(!name) { alert('ホテル名必須'); return; }
+  
+  if (!initial || initial === '') {
+    initial = normalizeName(name).charAt(0);
+  }
+  
+  let nh = { 
+    initial: initial, 
+    name: name, 
+    address: document.getElementById('newAddress').value.trim(), 
+    note: document.getElementById('newNote').value.trim(),
+    keywords: '' // 廃止
+  }; 
+  
+  DATA_ALL.push(nh); 
+  refreshAfterDataChange(); 
+  document.getElementById('newInitial').value = ''; 
+  document.getElementById('newName').value = ''; 
+  document.getElementById('newAddress').value = ''; 
+  document.getElementById('newNote').value = ''; 
+  viewIndex = VIEW.findIndex(h => h.name === nh.name && h.address === nh.address); 
+  if(viewIndex === -1) viewIndex = 0; 
+  updateForm(); 
+  alert('新規追加しました'); 
+}
 function delCurrent() { if(!confirm('削除しますか？')) return; let target = VIEW[viewIndex]; DATA_ALL = DATA_ALL.filter(h => h !== target); refreshAfterDataChange(); alert('削除しました'); }
 function downloadExcel() { sortDataAll(); let csv = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); downloadCSV(csv, 'hotels_export.csv'); }
 function downloadCSV(content, fn) { let blob = new Blob([content], { type: 'text/csv;charset=utf-8' }); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click(); URL.revokeObjectURL(a.href); }
-function onImportCSV(e) { let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = ev => { let lines = ev.target.result.split(/\r?\n/).filter(Boolean); DATA_ALL = lines.map(l => { let p = l.split(','); return { initial: p[0] || '', name: p[1] || '', address: p[2] || '', note: p[3] || '' }; }); refreshAfterDataChange(); alert(DATA_ALL.length + '件インポート・整列済み'); }; reader.readAsText(file); e.target.value = ''; }
+function onImportCSV(e) { 
+  let file = e.target.files[0]; 
+  if(!file) return; 
+  let reader = new FileReader(); 
+  reader.onload = ev => { 
+    let lines = ev.target.result.split(/\r?\n/).filter(Boolean); 
+    DATA_ALL = lines.map(l => { 
+      let p = l.split(','); 
+      let name = p[1] || '';
+      let initial = (p[0] || '').trim();
+      if (!initial) {
+        initial = normalizeName(name).charAt(0);
+      }
+      return { 
+        initial: initial, 
+        name: name, 
+        address: p[2] || '', 
+        note: p[3] || '' 
+      }; 
+    }); 
+    refreshAfterDataChange(); 
+    alert(DATA_ALL.length + '件インポート・整列済み'); 
+  }; 
+  reader.readAsText(file); 
+  e.target.value = ''; 
+}
 function openPrintModal() { document.getElementById('printModal').style.display = 'flex'; setTimeout(updateQRPreview, 100); setTimeout(refreshFullPreview, 200); }
 function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
 
 // ========== 行数固定分割ロジック（最適化版：1ページ目30行、2ページ目以降39行）==========
-// 1行あたりの高さ: 約4.8mm（9pt, line-height 1.2, padding上下2px）
-// 有効印刷高さ: 297mm - 上下余白20mm = 277mm
-// タイトル+新着情報: 約22mm → 残り255mm ÷ 4.8mm ≒ 53行（実用上45行で安全）
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
@@ -417,8 +539,6 @@ async function generateOptimizedPages() {
     return html;
   }
 
-  // 【最適化】行数設定: 1ページ目30行 / 2ページ目以降45行
-  // タイトル+新着情報で約8行分の高さを考慮し、1ページ目は30行で調整
   const FIRST_PAGE_ROWS = 30;
   const OTHER_PAGE_ROWS = 39;
 
