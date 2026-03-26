@@ -552,6 +552,15 @@ h1 {
 // ==================== 初回ロードフラグ ====================
 let isFirstLoad = true;
 
+// ==================== 正規化関数（追加） ====================
+function normalizeName(name) {
+  return (name || '')
+    .replace(/^札幌\s*/, '')
+    .replace(/^ホテル\s*/, '')
+    .replace(/ホテル$/, '')
+    .trim();
+}
+
 // ==================== iOS自動リンク対策関数 ====================
 function disableIOSDataDetectors() {
   // すべての要素からiOSが自動生成するリンクを除去
@@ -654,10 +663,9 @@ function getNormalizedFirstCharFromHotel(hotel) {
     }
     return init;
   }
-  let name = hotel.name || '';
+  let name = normalizeName(hotel.name);  // 正規化関数を使用
   if (!name) return '';
-  let cleaned = name.replace(/^ホテル\s*/, '').trim();
-  cleaned = cleaned.replace(/^[^ぁ-んァ-ン一-龠A-Za-z]+/, '');
+  let cleaned = name.replace(/^[^ぁ-んァ-ン一-龠A-Za-z]+/, '');
   if (cleaned.length === 0) return '';
   let firstChar = cleaned.charAt(0);
   if (firstChar >= 'ぁ' && firstChar <= 'ん') {
@@ -710,6 +718,17 @@ async function loadCSV() {
       {initial:'ホ', name:'ホテルポールスター札幌', address:'北海道札幌市中央区南8条西3', note:'サウナあり', keywords:'ポールスター'}
     ];
   }
+  // 【修正①】initial基準でソート、同値の場合のみname正規化で比較
+  DATA_ALL.sort((a,b) => {
+    const ia = (a.initial || '').trim();
+    const ib = (b.initial || '').trim();
+
+    if (ia !== ib) {
+      return ia.localeCompare(ib, 'ja');
+    }
+
+    return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
+  });
   DATA = DATA_ALL.slice();
   render(DATA_ALL);
 }
@@ -799,8 +818,20 @@ function showInitials(g) {
   showKeywordSelection(filtered, g);
 }
 
+// 【修正②】ブランド検索結果をinitial基準でソートしてから表示
 function searchByBrand(brand) {
-  const filtered = DATA_ALL.filter(h => h.name.includes(brand));
+  const filtered = DATA_ALL
+    .filter(h => h.name.includes(brand))
+    .sort((a,b) => {
+      const ia = (a.initial || '').trim();
+      const ib = (b.initial || '').trim();
+
+      if (ia !== ib) {
+        return ia.localeCompare(ib, 'ja');
+      }
+
+      return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
+    });
   render(filtered);
 }
 
