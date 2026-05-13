@@ -836,16 +836,25 @@ function showInitials(group) {
     enlargeCard(filtered[0]);
     return;
   }
-  // prefixMap生成: 各ホテルの持つ全てのキーを個別に登録
-  const prefixMap = new Map();
-  filtered.forEach(hotel => {
-    const keys = getInitialKeys(hotel);
-    keys.forEach(prefix => {
-      if (!prefixMap.has(prefix)) prefixMap.set(prefix, []);
-      prefixMap.get(prefix).push(hotel);
-    });
-  });
-  // キーをソート
+  // overlay表示は最初のキーだけ使う
+const prefixMap = new Map();
+
+filtered.forEach(hotel => {
+
+  const keys = getInitialKeys(hotel);
+
+  if (keys.length === 0) return;
+
+  const displayPrefix = keys[0];
+
+  if (!prefixMap.has(displayPrefix)) {
+    prefixMap.set(displayPrefix, []);
+  }
+
+  prefixMap.get(displayPrefix).push(hotel);
+
+});
+// キーをソート
   const sortedPrefixes = Array.from(prefixMap.keys()).sort((a,b) => a.localeCompare(b, 'ja'));
   let overlayHtml = `<h3>「${group === 'ALPHABET' ? 'A-Z' : group}」の絞り込み</h3>`;
   sortedPrefixes.forEach(prefix => {
