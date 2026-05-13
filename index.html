@@ -579,10 +579,12 @@ function normalizeName(name) {
 
 // ==================== 【修正①】複数キー対応のためgetInitialKeysに変更 ====================
 function getInitialKeys(hotel) {
-  return (hotel.initial || '')
-    .split('|')
-    .map(v => v.trim())
-    .filter(Boolean);
+
+  const first = (hotel.initial || '')
+    .split('|')[0]
+    .trim();
+
+  return first ? [first] : [];
 }
 
 // ==================== iOS自動リンク対策関数 ====================
