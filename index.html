@@ -845,6 +845,16 @@ filtered.forEach(hotel => {
 
   keys.forEach(displayPrefix => {
 
+    let ok = false;
+
+    if (group === 'ALPHABET') {
+      ok = /^[A-Za-z]/.test(displayPrefix);
+    } else {
+      ok = isCharInRow(displayPrefix.charAt(0), group);
+    }
+
+    if (!ok) return;
+
     if (!prefixMap.has(displayPrefix)) {
       prefixMap.set(displayPrefix, []);
     }
