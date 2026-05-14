@@ -912,11 +912,6 @@ function selectPrefix(prefix, group) {
       return keys.some(key => /^[A-Za-z]/.test(key) && key === prefix);
     });
   }
-  if (filtered.length === 1) {
-    enlargeCard(filtered[0]);
-  } else {
-    render(filtered);
-  }
 }
 
 function searchByBrand(brand) {
