@@ -843,15 +843,15 @@ filtered.forEach(hotel => {
 
   const keys = getInitialKeys(hotel);
 
-  if (keys.length === 0) return;
+  keys.forEach(displayPrefix => {
 
-  const displayPrefix = keys[0];
+    if (!prefixMap.has(displayPrefix)) {
+      prefixMap.set(displayPrefix, []);
+    }
 
-  if (!prefixMap.has(displayPrefix)) {
-    prefixMap.set(displayPrefix, []);
-  }
+    prefixMap.get(displayPrefix).push(hotel);
 
-  prefixMap.get(displayPrefix).push(hotel);
+  });
 
 });
 // キーをソート
