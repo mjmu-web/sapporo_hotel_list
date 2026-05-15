@@ -248,7 +248,7 @@ height: clamp(48px, 14vw, 60px);
 .instruction{
   text-align:center;
   color:#666;
-  margin:40px 0 20px 0;
+  margin:−20px 0 20px 0;
   font-size:16px;
 }
 .instruction strong {
@@ -336,6 +336,25 @@ height: clamp(48px, 14vw, 60px);
   font-weight: bold;
   cursor: pointer;
   font-size: 1.2em;
+}
+
+/* ===== 修正③: 単独TOPボタンのCSS (新規) ===== */
+#topBtn{
+  display:none;
+  position:fixed;
+  right:14px;
+  bottom:70px;
+  z-index:20;
+  padding:10px 14px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,0.45);
+  color:#fff;
+  backdrop-filter:blur(6px);
+  font-weight:700;
+  font-size:0.95rem;
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  cursor: pointer;
 }
 
 /* オーバーレイ（絞り込みポップアップ） */
@@ -626,23 +645,54 @@ height: clamp(48px, 14vw, 60px);
 </div>
 
 <div class="hotel-grid">
-  <button class="hotel-btn" data-brand="アパホテル">アパホテル</button>
-  <button class="hotel-btn" data-brand="東横INN">東横INN</button>
-  <button class="hotel-btn" data-brand="マイステイズ">マイステイズ</button>
-  <button class="hotel-btn" data-brand="リブマックス">リブマックス</button>
-  <button class="hotel-btn" data-brand="ルートイン">ルートイン</button>
-  <button class="hotel-btn" data-brand="RANDOR">RANDOR</button>
+
+  <button class="hotel-btn" data-brand="アパホテル">
+    アパホテル
+  </button>
+
+  <button class="hotel-btn" data-brand="グランベル">
+    グランベル
+  </button>
+
+  <button class="hotel-btn" data-brand="東横INN">
+    東横INN
+  </button>
+
+  <button class="hotel-btn" data-brand="マイステイズ">
+    マイステイズ
+  </button>
+
+  <button class="hotel-btn" data-brand="リブマックス">
+    リブマックス
+  </button>
+
+  <button class="hotel-btn" data-brand="ルートイン">
+    ルートイン
+  </button>
+
+  <button class="hotel-btn" data-brand="JR">
+    JR
+  </button>
+
+  <button class="hotel-btn" data-brand="RANDOR">
+    RANDOR
+  </button>
+
 </div>
 
 <div class="instruction"><strong>MJMU</strong> All rights reserved Powerd by <i>BANDO</i></div>
 <div id="results"></div>
 
+<!-- 修正②: bottomBtns から topBtn を削除し、外に移動 -->
 <div id="bottomBtns">
   <button class="metal-small" id="qrBtn">📱</button>
   <button class="metal-small" id="speedBtn">🧭</button>
   <button class="metal-small" onclick="location.href='bbs.html'">💬</button>
   <button class="metal-small" onclick="location.href='manual_entry_form.html'">⚙️</button>
 </div>
+
+<!-- 修正②: 独立したTOPボタン -->
+<button id="topBtn">↑TOP</button>
 
 <button id="addHome">🏠 ホームに追加</button>
 
@@ -876,6 +926,19 @@ function scrollToResults() {
 
 function render(list) {
   const el = document.getElementById('results');
+  const topBtn = document.getElementById('topBtn');
+
+  // ===== 修正①: 表示条件を厳しく (初回表示では出さない、3件以上で表示) =====
+  if (!isFirstLoad) {
+
+  topBtn.style.display = 'block';
+
+} else {
+
+  topBtn.style.display = 'none';
+
+}
+
   if (list.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:#666;margin:20px 0;">該当するホテルが見つかりませんでした</div>';
     setTimeout(disableIOSDataDetectors, 10);
@@ -1070,6 +1133,22 @@ document.getElementById('qrBtn').addEventListener('click', () => {
   document.getElementById('qrModal').style.display = 'flex';
 });
 function closeQR() { document.getElementById('qrModal').style.display = 'none'; }
+
+document.getElementById('topBtn').addEventListener('click', () => {
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+
+    document.getElementById('topBtn')
+      .style.display = 'none';
+
+  }, 500);
+
+});
 
 async function loadNewsFromJSON() {
   try {
