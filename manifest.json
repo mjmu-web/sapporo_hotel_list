@@ -1,7 +1,7 @@
 {
   "name": "札幌ホテルリスト",
-  "short_name": "SHL",
-  "start_url": "index.html",
+  "short_name": "札幌ホテル",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#c0c0c0",
   "theme_color": "#c0c0c0",
