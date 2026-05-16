@@ -681,25 +681,6 @@ height: clamp(48px, 14vw, 60px);
 </div>
 
 <div class="instruction"><strong>MJMU</strong> All rights reserved Powerd by <i>BANDO</i></div>
-<div class="hotel-grid">
-
-  <button class="hotel-btn" data-area="定山渓">
-    定山渓
-  </button>
-
-  <button class="hotel-btn" data-area="ニセコ">
-    ニセコ
-  </button>
-
-  <button class="hotel-btn" data-area="小樽">
-    小樽
-  </button>
-
-  <button class="hotel-btn" data-area="千歳">
-    千歳
-  </button>
-
-</div>
 <div id="results"></div>
 
 <!-- 修正②: bottomBtns から topBtn を削除し、外に移動 -->
@@ -1106,41 +1087,10 @@ function searchByBrand(brand) {
       const keysB = getInitialKeys(b);
       const ia = keysA.length > 0 ? keysA[0] : '';
       const ib = keysB.length > 0 ? keysB[0] : '';
-
-      if (ia !== ib)
-        return ia.localeCompare(ib, 'ja');
-
-      return normalizeName(a.name)
-        .localeCompare(normalizeName(b.name), 'ja');
+      if (ia !== ib) return ia.localeCompare(ib, 'ja');
+      return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
     });
-
   render(filtered);
-}
-
-/* ↓↓↓ ここ追加 ↓↓↓ */
-
-function searchByArea(area) {
-
-  const filtered = DATA_ALL
-    .filter(h =>
-      (h.initial || '').includes(area)
-    )
-    .sort((a,b) => {
-      const keysA = getInitialKeys(a);
-      const keysB = getInitialKeys(b);
-
-      const ia = keysA.length > 0 ? keysA[0] : '';
-      const ib = keysB.length > 0 ? keysB[0] : '';
-
-      if (ia !== ib)
-        return ia.localeCompare(ib, 'ja');
-
-      return normalizeName(a.name)
-        .localeCompare(normalizeName(b.name), 'ja');
-    });
-
-  render(filtered);
-
 }
 
 function closeOverlay() {
@@ -1173,22 +1123,8 @@ function closeModal() {
 }
 
 document.addEventListener('click', e => {
-
-  if (e.target.matches('[data-g]'))
-    showInitials(
-      e.target.getAttribute('data-g')
-    );
-
-  if (e.target.matches('[data-brand]'))
-    searchByBrand(
-      e.target.getAttribute('data-brand')
-    );
-
-  if (e.target.matches('[data-area]'))
-    searchByArea(
-      e.target.getAttribute('data-area')
-    );
-
+  if (e.target.matches('[data-g]')) showInitials(e.target.getAttribute('data-g'));
+  if (e.target.matches('[data-brand]')) searchByBrand(e.target.getAttribute('data-brand'));
 });
 
 document.getElementById('qrBtn').addEventListener('click', () => {
