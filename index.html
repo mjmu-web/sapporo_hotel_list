@@ -1153,12 +1153,51 @@ function enlargeCard(h) {
   const modal = document.getElementById('modal');
   const content = document.getElementById('modal-content');
   content.innerHTML = `
-    <h2>${h.name}</h2>
-    <p x-apple-data-detectors='false' class='address-text'>📍 ${h.address}</p>
-    ${h.note ? '<p>📝 ' + h.note + '</p>' : ''}
-    <p>🔍 <a href='https://www.google.com/search?q=${encodeURIComponent(h.name)}' target='_blank'>Google検索</a></p>
-    <p>🗺️ <a href='${mapLink(h.name, h.address)}' target='_blank'>地図</a></p>
-  `;
+  <h2>${h.name}</h2>
+
+  <p x-apple-data-detectors='false' class='address-text'>
+    📍 ${h.address}
+  </p>
+
+  ${h.note ? '<p>📝 ' + h.note + '</p>' : ''}
+
+  <p>
+    🔍
+    <a
+      href='https://www.google.com/search?q=${encodeURIComponent(h.name)}'
+      target='_blank'
+    >
+      Google検索
+    </a>
+  </p>
+
+  <p>
+    🗺️
+    <a
+      href='${mapLink(h.name, h.address)}'
+      target='_blank'
+    >
+      地図
+    </a>
+  </p>
+
+  <p style="margin-top:18px;">
+    <a
+      href="manual_entry_form.html?edit=${encodeURIComponent(h.name)}"
+      style="
+        display:inline-block;
+        padding:10px 18px;
+        background:#357;
+        color:#fff !important;
+        border-radius:10px;
+        text-decoration:none;
+        font-weight:bold;
+      "
+    >
+      ✏️ 編集
+    </a>
+  </p>
+`;
   const existing = content.querySelector('.close-btn-corner');
   if (existing) existing.remove();
   const closeBtn = document.createElement('button');

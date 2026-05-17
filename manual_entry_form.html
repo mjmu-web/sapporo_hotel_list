@@ -327,20 +327,67 @@ function normalizeName(name) {
 
 init();
 async function init() {
+
   await loadCSV();
+
   sortDataAll();
-  try { await loadNewsFromJSON(); } catch(e) { console.log(e); }
-  loadNewsFromURL();
-  bindUI();
-  VIEW = DATA_ALL.slice();
-  currentGroup = null;
-  viewIndex = 0;
-  updateForm();
-  // 【4】起動時にトークン復元
-  const savedToken = localStorage.getItem('githubToken');
-  if(savedToken){
-    document.getElementById('githubToken').value = savedToken;
+
+  try {
+
+    await loadNewsFromJSON();
+
+  } catch(e) {
+
+    console.log(e);
+
   }
+
+  loadNewsFromURL();
+
+  bindUI();
+
+  VIEW = DATA_ALL.slice();
+
+  currentGroup = null;
+
+  viewIndex = 0;
+
+  updateForm();
+
+  // GitHubトークン復元
+  const savedToken = localStorage.getItem('githubToken');
+
+  if(savedToken){
+
+    document.getElementById('githubToken').value = savedToken;
+
+  }
+
+  // URLから編集対象ホテル取得
+  const params = new URLSearchParams(location.search);
+
+  const editName = params.get('edit');
+
+  if(editName){
+
+    const idx = DATA_ALL.findIndex(h =>
+
+      h.name === editName
+
+    );
+
+    if(idx >= 0){
+
+      VIEW = DATA_ALL.slice();
+
+      viewIndex = idx;
+
+      updateForm();
+
+    }
+
+  }
+
 }
 
 async function loadCSV() { 
@@ -419,19 +466,92 @@ function bindUI() {
   const triggers = ['printTitle','titleFontSize','includeQR','qrWithTitle','qrSize','printInitial','printName','printAddress','printNote','printNews','printPageNumbers','bodyFontSize','printSapporo','printJozankei','printNiseko','printOtaru','printChitose']; 
   triggers.forEach(id => { let el = document.getElementById(id); if(el) el.addEventListener('change', () => setTimeout(refreshFullPreview, 50)); }); 
 }
-function applyGroup(g) { currentGroup = g; if(KANA_RANGES[g]) { VIEW = DATA_ALL.filter(h => KANA_RANGES[g].test(normalizeName(h.name).charAt(0))); } else { let set = ALPHA_GROUPS[g] || ''; VIEW = DATA_ALL.filter(h => set.includes((normalizeName(h.name).charAt(0) || '').toUpperCase())); } VIEW.sort((a,b) => {
-const ia = (a.initial || '').trim();
-const ib = (b.initial || '').trim();
+function applyGroup(g) {
 
-if (ia !== ib) {
-return ia.localeCompare(ib, 'ja');
+  currentGroup = g;
+
+  if(KANA_RANGES[g]) {
+
+    VIEW = DATA_ALL.filter(h =>
+
+      KANA_RANGES[g].test(
+        (h.name || '').charAt(0)
+      )
+
+    );
+
+  } else {
+
+    let set = ALPHA_GROUPS[g] || '';
+
+    VIEW = DATA_ALL.filter(h =>
+
+      set.includes(
+        ((h.name || '').charAt(0) || '')
+          .toUpperCase()
+      )
+
+    );
+
+  }
+
+  VIEW.sort((a,b) => {
+
+    const ia = (a.initial || '').trim();
+    const ib = (b.initial || '').trim();
+
+    if (ia !== ib) {
+      return ia.localeCompare(ib, 'ja');
+    }
+
+    return normalizeName(a.name)
+      .localeCompare(normalizeName(b.name), 'ja');
+
+  });
+
+  viewIndex = 0;
+
+  updateForm();
+
 }
 
-return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
-}); viewIndex = 0; updateForm(); }
 function updateForm() { let h = VIEW[viewIndex] || {}; document.getElementById('fInitial').value = h.initial || ''; document.getElementById('fName').value = h.name || ''; document.getElementById('fAddress').value = h.address || ''; document.getElementById('fNote').value = h.note || ''; document.getElementById('pos').textContent = VIEW.length > 0 ? viewIndex + 1 : 0; document.getElementById('len').textContent = VIEW.length; document.getElementById('btnPrev').disabled = viewIndex <= 0; document.getElementById('btnNext').disabled = viewIndex >= VIEW.length - 1; document.getElementById('btnDelete').disabled = VIEW.length === 0; }
 function move(delta) { viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta)); updateForm(); }
-function searchByName() { let q = document.getElementById('jumpHead').value.toLowerCase().trim(); if(!q) return; let idx = VIEW.findIndex(h => (h.name || '').toLowerCase().includes(q)); if(idx >= 0) { viewIndex = idx; updateForm(); } else alert('該当なし'); }
+function searchByName() {
+
+  let q = document
+    .getElementById('jumpHead')
+    .value
+    .toLowerCase()
+    .trim();
+
+  if(!q) return;
+
+  let idx = DATA_ALL.findIndex(h =>
+
+    (h.name || '')
+      .toLowerCase()
+      .includes(q)
+
+  );
+
+  if(idx >= 0) {
+
+    VIEW = DATA_ALL.slice();
+
+    viewIndex = idx;
+
+    currentGroup = null;
+
+    updateForm();
+
+  } else {
+
+    alert('該当なし');
+
+  }
+
+}
 // 【6】saveCurrentEdit を async function に変更し、即GitHub保存化
 async function saveCurrentEdit() { 
   if(VIEW.length === 0) return; 
