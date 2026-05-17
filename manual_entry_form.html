@@ -196,6 +196,15 @@ a[href^="mailto"] {
 <body>
   <div class="panel no-print">
     <h2 class="section-title">新着情報</h2>
+    <!-- 【1】新着情報パネル最上部へ GitHubトークン入力欄を追加 -->
+    <div style="margin-bottom:10px;">
+      <input
+        type="password"
+        id="githubToken"
+        placeholder="GitHubトークン"
+        style="padding:8px; border-radius:6px; border:1px solid #bbb; width:100%; box-sizing:border-box;"
+      >
+    </div>
     <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
     <div class="row"><label>2</label><input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）"></div>
     <div class="row"><label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）"></div>
@@ -254,12 +263,8 @@ a[href^="mailto"] {
     <h2 class="section-title">管理ツール</h2>
     <div class="controls">
       <button class="btn" onclick="openPrintModal()">🖨️ 印刷設定＆全ページプレビュー</button>
-      <label class="btn" for="csvFile">📤 CSVインポート</label><input id="csvFile" type="file" accept=".csv,text/csv" style="display:none">
+      <!-- 【2】管理ツールから削除: CSVインポートとGitHub関連要素を削除 -->
       <button class="btn" onclick="downloadExcel()">📥 CSVでダウンロード</button>
-      <div style="display:flex; gap:8px; margin-left:10px; align-items:center;">
-        <input type="password" id="githubToken" placeholder="GitHubトークン（変更時のみ）" style="padding:8px; border-radius:6px; border:1px solid #bbb; width:250px;">
-        <button class="btn btn-primary" onclick="saveAllToGitHub()">🚀 すべてGitHubに保存</button>
-      </div>
       <a class="btn" href="index.html">🏠 トップへ戻る</a>
     </div>
     <div class="hint">※ CSVインポート後は自動で全件置換 → 名前順に整列。GitHub保存でCSVと新着情報が同時更新。</div>
@@ -271,7 +276,14 @@ a[href^="mailto"] {
       <div class="modal-body">
         <div class="print-settings">
           <div class="setting-group"><h4>📌 表題</h4><div class="setting-row"><input type="text" id="printTitle" value="札幌ホテルリスト" style="width:100%; padding:4px;"></div><div class="setting-row"><span>サイズ:</span><select id="titleFontSize"><option value="14pt">小 (14pt)</option><option value="18pt" selected>中 (18pt)</option><option value="22pt">大 (22pt)</option><option value="26pt">特大 (26pt)</option></select></div></div>
-          <div class="setting-group"><h4>📱 QRコード</h4><div class="setting-row"><label><input type="checkbox" id="includeQR" checked> 含める</label><label><input type="checkbox" id="qrWithTitle" checked> 表題と同じ行</label></div><div class="setting-row"><span>サイズ:</span><select id="qrSize"><option value="60">小 (60px)</option><option value="80" selected>中 (80px)</option><option value="100">大 (100px)</option></select></div><div id="qrPreview" class="qr-preview" style="display:none;"><img id="qrPreviewImg" src="" alt="QRコード"></div></div>
+          <div class="setting-group"><h4>📱 QRコード</h4><div class="setting-row"><label><input type="checkbox" id="includeQR" checked> 含める</label><label><input type="checkbox" id="qrWithTitle" checked> 表題と同じ行</label></div><div class="setting-row"><span>サイズ:</span><select id="qrSize"><option value="60">小 (60px)</option><option value="80" selected>中 (80px)</option><option value="100">大 (100px)</option></select></div><div id="qrPreview" class="qr-preview" style="display:none;"><img id="qrPreviewImg" src="" alt="QRコード"></div>
+<div style="margin-top:12px;">
+  <label><input type="checkbox" id="printSapporo" checked> 札幌</label><br>
+  <label><input type="checkbox" id="printJozankei" checked> 定山渓</label><br>
+  <label><input type="checkbox" id="printNiseko" checked> ニセコ</label><br>
+  <label><input type="checkbox" id="printOtaru" checked> 小樽</label><br>
+  <label><input type="checkbox" id="printChitose" checked> 千歳</label>
+</div></div>
           <div class="setting-group"><h4>📋 表示項目</h4><div style="display:grid; grid-template-columns:repeat(2,1fr);"><label><input type="checkbox" id="printInitial" checked> 頭文字</label><label><input type="checkbox" id="printName" checked> ホテル名</label><label><input type="checkbox" id="printAddress" checked> 住所</label><label><input type="checkbox" id="printNote" checked> 備考</label><label><input type="checkbox" id="printNews" checked> 新着情報</label><label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label></div></div>
           <div class="setting-group">
             <h4>📐 ページ分割（行数固定方式）</h4>
@@ -324,6 +336,11 @@ async function init() {
   currentGroup = null;
   viewIndex = 0;
   updateForm();
+  // 【4】起動時にトークン復元
+  const savedToken = localStorage.getItem('githubToken');
+  if(savedToken){
+    document.getElementById('githubToken').value = savedToken;
+  }
 }
 
 async function loadCSV() { 
@@ -364,17 +381,42 @@ return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
 function refreshAfterDataChange() { sortDataAll(); if(currentGroup) applyGroup(currentGroup); else { VIEW = DATA_ALL.slice(); viewIndex = Math.min(viewIndex, VIEW.length-1); if(viewIndex < 0 && VIEW.length > 0) viewIndex = 0; updateForm(); } }
 function loadNewsFromURL() { const params = new URLSearchParams(location.search); if (params.get('news1')) document.getElementById('n1').value = params.get('news1'); if (params.get('news2')) document.getElementById('n2').value = params.get('news2'); if (params.get('news3')) document.getElementById('n3').value = params.get('news3'); }
 async function loadNewsFromJSON() { const r = await fetch(NEWS_PATH + '?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) { const news = await r.json(); document.getElementById('n1').value = news.news1 || ''; document.getElementById('n2').value = news.news2 || ''; document.getElementById('n3').value = news.news3 || ''; } }
-async function saveNewsToJSON() { const token = document.getElementById('githubToken').value; if(!token){ alert('GitHubトークンを入力してください'); return; } const newsData = { news1: document.getElementById('n1').value, news2: document.getElementById('n2').value, news3: document.getElementById('n3').value, updated: new Date().toISOString() }; await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json'); alert('✅ 新着情報を保存しました'); }
+// 【5】新着情報保存を即GitHub保存化
+async function saveNewsToJSON() { 
+  // 確認ダイアログ
+  if(!confirm('新着情報をGitHubへ保存しますか？')) return;
+  
+  const token = document.getElementById('githubToken').value;
+  if(!token){ alert('GitHubトークンを入力してください'); return; }
+  // 【3】トークン自動保存
+  localStorage.setItem('githubToken', token);
+  
+  const newsData = { 
+    news1: document.getElementById('n1').value, 
+    news2: document.getElementById('n2').value, 
+    news3: document.getElementById('n3').value, 
+    updated: new Date().toISOString() 
+  }; 
+  await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json'); 
+  // hotels.csv も同時保存
+  sortDataAll(); 
+  let csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); 
+  await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel');
+  alert('✅ GitHubへ保存しました'); 
+}
 function previewWithNews() { const p = new URLSearchParams(); ['n1','n2','n3'].forEach(id => { let v = document.getElementById(id).value; if(v) p.set('news'+id.slice(1), v); }); window.open('index.html?' + p.toString(), '_blank'); }
 function bindUI() { 
   window.previewWithNews = previewWithNews; window.saveNewsToJSON = saveNewsToJSON; window.downloadExcel = downloadExcel; window.saveAllToGitHub = saveAllToGitHub; window.openPrintModal = openPrintModal; window.closePrintModal = closePrintModal; window.refreshFullPreview = refreshFullPreview; window.executePrintFromModal = executePrintFromModal; 
   document.querySelectorAll('[data-g]').forEach(b => { b.addEventListener('click', () => applyGroup(b.getAttribute('data-g'))); }); 
   document.getElementById('btnPrev').addEventListener('click', () => move(-1)); document.getElementById('btnNext').addEventListener('click', () => move(1)); 
-  document.getElementById('btnSave').addEventListener('click', saveCurrentEdit); document.getElementById('btnDelete').addEventListener('click', delCurrent); 
-  document.getElementById('btnSearch').addEventListener('click', searchByName); document.getElementById('csvFile').addEventListener('change', onImportCSV); 
-  document.getElementById('btnNewAdd').addEventListener('click', addNewHotel); 
+  // 【6】ホテル編集の保存を即GitHub保存化のために非同期対応
+  document.getElementById('btnSave').addEventListener('click', async () => await saveCurrentEdit()); 
+  document.getElementById('btnDelete').addEventListener('click', delCurrent); 
+  document.getElementById('btnSearch').addEventListener('click', searchByName); 
+  // CSVインポートのイベントリスナー削除
+  document.getElementById('btnNewAdd').addEventListener('click', async () => await addNewHotel()); 
   document.getElementById('includeQR').addEventListener('change', updateQRPreview); document.getElementById('qrSize').addEventListener('change', updateQRPreview); 
-  const triggers = ['printTitle','titleFontSize','includeQR','qrWithTitle','qrSize','printInitial','printName','printAddress','printNote','printNews','printPageNumbers','bodyFontSize']; 
+  const triggers = ['printTitle','titleFontSize','includeQR','qrWithTitle','qrSize','printInitial','printName','printAddress','printNote','printNews','printPageNumbers','bodyFontSize','printSapporo','printJozankei','printNiseko','printOtaru','printChitose']; 
   triggers.forEach(id => { let el = document.getElementById(id); if(el) el.addEventListener('change', () => setTimeout(refreshFullPreview, 50)); }); 
 }
 function applyGroup(g) { currentGroup = g; if(KANA_RANGES[g]) { VIEW = DATA_ALL.filter(h => KANA_RANGES[g].test(normalizeName(h.name).charAt(0))); } else { let set = ALPHA_GROUPS[g] || ''; VIEW = DATA_ALL.filter(h => set.includes((normalizeName(h.name).charAt(0) || '').toUpperCase())); } VIEW.sort((a,b) => {
@@ -390,7 +432,8 @@ return normalizeName(a.name).localeCompare(normalizeName(b.name), 'ja');
 function updateForm() { let h = VIEW[viewIndex] || {}; document.getElementById('fInitial').value = h.initial || ''; document.getElementById('fName').value = h.name || ''; document.getElementById('fAddress').value = h.address || ''; document.getElementById('fNote').value = h.note || ''; document.getElementById('pos').textContent = VIEW.length > 0 ? viewIndex + 1 : 0; document.getElementById('len').textContent = VIEW.length; document.getElementById('btnPrev').disabled = viewIndex <= 0; document.getElementById('btnNext').disabled = viewIndex >= VIEW.length - 1; document.getElementById('btnDelete').disabled = VIEW.length === 0; }
 function move(delta) { viewIndex = Math.max(0, Math.min(VIEW.length - 1, viewIndex + delta)); updateForm(); }
 function searchByName() { let q = document.getElementById('jumpHead').value.toLowerCase().trim(); if(!q) return; let idx = VIEW.findIndex(h => (h.name || '').toLowerCase().includes(q)); if(idx >= 0) { viewIndex = idx; updateForm(); } else alert('該当なし'); }
-function saveCurrentEdit() { 
+// 【6】saveCurrentEdit を async function に変更し、即GitHub保存化
+async function saveCurrentEdit() { 
   if(VIEW.length === 0) return; 
   let h = VIEW[viewIndex]; 
   let initial = document.getElementById('fInitial').value.trim();
@@ -412,9 +455,14 @@ function saveCurrentEdit() {
   let newIdx = VIEW.findIndex(hh => hh === h); 
   viewIndex = newIdx >= 0 ? newIdx : 0; 
   updateForm(); 
-  alert('保存しました'); 
+  
+  // 確認とGitHub保存
+  if(!confirm('この内容でGitHubへ保存しますか？')) return;
+  await saveAllToGitHub();
+  alert('✅ GitHubへ保存しました');
 }
-function addNewHotel() { 
+// 【7】addNewHotel を async function に変更し、即GitHub保存化
+async function addNewHotel() { 
   let initial = document.getElementById('newInitial').value.trim();
   let name = document.getElementById('newName').value.trim();
   
@@ -441,37 +489,16 @@ function addNewHotel() {
   viewIndex = VIEW.findIndex(h => h.name === nh.name && h.address === nh.address); 
   if(viewIndex === -1) viewIndex = 0; 
   updateForm(); 
-  alert('新規追加しました'); 
+  
+  // 確認とGitHub保存
+  if(!confirm('この内容で新規追加してGitHubへ保存しますか？')) return;
+  await saveAllToGitHub();
+  alert('✅ GitHubへ保存しました');
 }
 function delCurrent() { if(!confirm('削除しますか？')) return; let target = VIEW[viewIndex]; DATA_ALL = DATA_ALL.filter(h => h !== target); refreshAfterDataChange(); alert('削除しました'); }
 function downloadExcel() { sortDataAll(); let csv = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); downloadCSV(csv, 'hotels_export.csv'); }
 function downloadCSV(content, fn) { let blob = new Blob([content], { type: 'text/csv;charset=utf-8' }); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click(); URL.revokeObjectURL(a.href); }
-function onImportCSV(e) { 
-  let file = e.target.files[0]; 
-  if(!file) return; 
-  let reader = new FileReader(); 
-  reader.onload = ev => { 
-    let lines = ev.target.result.split(/\r?\n/).filter(Boolean); 
-    DATA_ALL = lines.map(l => { 
-      let p = l.split(','); 
-      let name = p[1] || '';
-      let initial = (p[0] || '').trim();
-      if (!initial) {
-        initial = normalizeName(name).charAt(0);
-      }
-      return { 
-        initial: initial, 
-        name: name, 
-        address: p[2] || '', 
-        note: p[3] || '' 
-      }; 
-    }); 
-    refreshAfterDataChange(); 
-    alert(DATA_ALL.length + '件インポート・整列済み'); 
-  }; 
-  reader.readAsText(file); 
-  e.target.value = ''; 
-}
+// CSVインポート関数削除
 function openPrintModal() { document.getElementById('printModal').style.display = 'flex'; setTimeout(updateQRPreview, 100); setTimeout(refreshFullPreview, 200); }
 function closePrintModal() { document.getElementById('printModal').style.display = 'none'; }
 function updateQRPreview() { let include = document.getElementById('includeQR').checked; let previewDiv = document.getElementById('qrPreview'); if(include) { previewDiv.style.display = 'block'; let size = parseInt(document.getElementById('qrSize').value); let url = window.location.origin + window.location.pathname.replace('manual_entry_form.html', 'index.html'); QRCode.toDataURL(url, { width: size, margin: 1 }, (err, data) => { if(!err) document.getElementById('qrPreviewImg').src = data; refreshFullPreview(); }); } else { previewDiv.style.display = 'none'; refreshFullPreview(); } }
@@ -480,6 +507,45 @@ function updateQRPreview() { let include = document.getElementById('includeQR').
 async function generateOptimizedPages() {
   sortDataAll();
   if (!DATA_ALL.length) return [];
+
+  // 地域フィルタリングの追加ここから
+  let printData = DATA_ALL;
+  const areas = [];
+  if(document.getElementById('printSapporo').checked) areas.push('札幌');
+  if(document.getElementById('printJozankei').checked) areas.push('定山渓');
+  if(document.getElementById('printNiseko').checked) areas.push('ニセコ');
+  if(document.getElementById('printOtaru').checked) areas.push('小樽');
+  if(document.getElementById('printChitose').checked) areas.push('千歳');
+  if(areas.length > 0) {
+
+  printData = DATA_ALL.filter(h =>
+
+    areas.some(a => {
+
+      // 札幌 = 地方タグ無し
+      if(a === '札幌') {
+
+        return !(
+          (h.initial || '').includes('定山渓') ||
+          (h.initial || '').includes('ニセコ') ||
+          (h.initial || '').includes('小樽') ||
+          (h.initial || '').includes('千歳')
+        );
+
+      }
+
+      return (h.initial || '').includes(a);
+
+    })
+
+  );
+
+} else {
+
+  printData = DATA_ALL;
+
+}
+  // 地域フィルタリングここまで
 
   const opt = {
     title: document.getElementById('printTitle').value,
@@ -546,10 +612,10 @@ async function generateOptimizedPages() {
   let start = 0;
   let pageIndex = 0;
 
-  while (start < DATA_ALL.length) {
+  while (start < printData.length) {
     let limit = pageIndex === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
     let end = start + limit;
-    let safeEnd = Math.min(end, DATA_ALL.length);
+    let safeEnd = Math.min(end, printData.length);
     if (safeEnd === start) { start++; continue; }
     pages.push({ start: start, end: safeEnd });
     start = safeEnd;
@@ -559,7 +625,7 @@ async function generateOptimizedPages() {
   let resultPages = [];
   for(let i = 0; i < pages.length; i++) {
     let p = pages[i];
-    let pageData = DATA_ALL.slice(p.start, p.end);
+    let pageData = printData.slice(p.start, p.end);
     if (pageData.length === 0) continue;
     let pageHTML = `<div class="print-page">`;
     if (i === 0) pageHTML += buildHeaderHTML();
@@ -584,15 +650,52 @@ async function refreshFullPreview() {
   let pageIdx = 0;
   const FIRST_PAGE_ROWS = 30;
   const OTHER_PAGE_ROWS = 39;
-  while (start < DATA_ALL.length) {
-    let limit = pageIdx === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
-    let end = Math.min(start + limit, DATA_ALL.length);
-    let rows = end - start;
-    pageDetails.push(`${pageIdx+1}P:${rows}行`);
-    start = end;
-    pageIdx++;
+
+  // フィルタ後の印刷データ数を取得するため、generateOptimizedPages内部と同じ絞り込みをここでも実施
+  let printDataCount = DATA_ALL.length;
+  const areas = [];
+  if(document.getElementById('printSapporo').checked) areas.push('札幌');
+  if(document.getElementById('printJozankei').checked) areas.push('定山渓');
+  if(document.getElementById('printNiseko').checked) areas.push('ニセコ');
+  if(document.getElementById('printOtaru').checked) areas.push('小樽');
+  if(document.getElementById('printChitose').checked) areas.push('千歳');
+  if(areas.length > 0) {
+
+  printDataCount = DATA_ALL.filter(h =>
+
+    areas.some(a => {
+
+      // 札幌 = 地方タグ無し
+      if(a === '札幌') {
+
+        return !(
+          (h.initial || '').includes('定山渓') ||
+          (h.initial || '').includes('ニセコ') ||
+          (h.initial || '').includes('小樽') ||
+          (h.initial || '').includes('千歳')
+        );
+
+      }
+
+      return (h.initial || '').includes(a);
+
+    })
+
+  ).length;
+
+}
+
+  let filteredCount = printDataCount;
+  let pos = 0;
+  let pidx = 0;
+  while (pos < filteredCount) {
+    let limit = pidx === 0 ? FIRST_PAGE_ROWS : OTHER_PAGE_ROWS;
+    let rows = Math.min(limit, filteredCount - pos);
+    pageDetails.push(`${pidx+1}P:${rows}行`);
+    pos += rows;
+    pidx++;
   }
-  if(pages.length) infoSpan.innerHTML = `全${DATA_ALL.length}件 → ${pages.length}ページ (${pageDetails.join(', ')})`;
+  if(pages.length) infoSpan.innerHTML = `全${filteredCount}件 → ${pages.length}ページ (${pageDetails.join(', ')})`;
   else infoSpan.innerHTML = 'データなし';
   let previewHtml = '<div style="font-family:Meiryo,\'メイリオ\',sans-serif;">';
   for(let i=0;i<pages.length;i++) previewHtml += `<div class="print-preview-page">${pages[i]}</div>`;
@@ -608,7 +711,11 @@ async function executePrint() {
 }
 async function executePrintFromModal() { await executePrint(); closePrintModal(); }
 
-async function saveAllToGitHub() { let token = document.getElementById('githubToken').value; if(!token) { alert('GitHubトークンを入力してください'); return; } if(!confirm(DATA_ALL.length + '件のデータをGitHubに保存しますか？')) return; sortDataAll(); let csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel'); let newsData = { news1: document.getElementById('n1').value, news2: document.getElementById('n2').value, news3: document.getElementById('n3').value, updated: new Date().toISOString() }; await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel'); alert('✅ CSVと新着情報をGitHubに保存しました\n数分後に反映されます'); }
+// 【8】saveAllToGitHub から confirm を削除
+async function saveAllToGitHub() { let token = document.getElementById('githubToken').value; if(!token) { alert('GitHubトークンを入力してください'); return; } 
+  // 【3】トークン自動保存
+  localStorage.setItem('githubToken', token);
+  sortDataAll(); let csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel'); let newsData = { news1: document.getElementById('n1').value, news2: document.getElementById('n2').value, news3: document.getElementById('n3').value, updated: new Date().toISOString() }; await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel'); }
 async function saveFileToGitHub(token, path, content, message) { let api = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + path; let sha = null; try { let get = await fetch(api, { headers: { 'Authorization': 'token ' + token } }); if(get.ok) { let cur = await get.json(); sha = cur.sha; } } catch(e) {} let put = await fetch(api, { method: 'PUT', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, content: btoa(unescape(encodeURIComponent(content))), sha: sha }) }); if(!put.ok) throw new Error((await put.json()).message); return put.json(); }
 </script>
 </body>
