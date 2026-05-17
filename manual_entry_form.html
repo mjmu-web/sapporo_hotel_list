@@ -233,7 +233,7 @@ a[href^="mailto"] {
       <button class="btn-a" data-g="YZ">YZ</button>
     </div>
     <div id="card" class="card">
-      <div class="row"><label>頭文字</label><input id="fInitial" type="text" placeholder="あ / A"><label>ホテル名</label><input id="fName" type="text" placeholder="ホテル◯◯"></div>
+      <div class="row"><label>検索タグ</label><input id="fInitial" type="text" placeholder="あ | A"><label>ホテル名</label><input id="fName" type="text" placeholder="ホテル◯◯"></div>
       <div class="row"><label>住所</label><input id="fAddress" type="text" placeholder="札幌市◯◯区…"></div>
       <div class="row"><label>備考</label><textarea id="fNote" rows="3" placeholder="例：南2条通北側、駅近、旧名称あり など"></textarea></div>
       <div class="separator"></div>
@@ -252,7 +252,7 @@ a[href^="mailto"] {
 
   <div class="panel no-print new-hotel-panel">
     <h2 class="section-title">📝 新規ホテル登録（名前順に自動挿入）</h2>
-    <div class="row"><label>頭文字</label><input id="newInitial" type="text" placeholder="あ / A"><label>ホテル名</label><input id="newName" type="text" placeholder="ホテル名（必須）"></div>
+    <div class="row"><label>検索タグ</label><input id="newInitial" type="text" placeholder="あ | A"><label>ホテル名</label><input id="newName" type="text" placeholder="ホテル名（必須）"></div>
     <div class="row"><label>住所</label><input id="newAddress" type="text" placeholder="札幌市…"></div>
     <div class="row"><label>備考</label><textarea id="newNote" rows="2" placeholder="備考"></textarea></div>
     <div class="controls"><button class="btn btn-success" id="btnNewAdd">✨ 新規追加（自動整列）</button></div>
@@ -284,7 +284,7 @@ a[href^="mailto"] {
   <label><input type="checkbox" id="printOtaru" checked> 小樽</label><br>
   <label><input type="checkbox" id="printChitose" checked> 千歳</label>
 </div></div>
-          <div class="setting-group"><h4>📋 表示項目</h4><div style="display:grid; grid-template-columns:repeat(2,1fr);"><label><input type="checkbox" id="printInitial" checked> 頭文字</label><label><input type="checkbox" id="printName" checked> ホテル名</label><label><input type="checkbox" id="printAddress" checked> 住所</label><label><input type="checkbox" id="printNote" checked> 備考</label><label><input type="checkbox" id="printNews" checked> 新着情報</label><label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label></div></div>
+          <div class="setting-group"><h4>📋 表示項目</h4><div style="display:grid; grid-template-columns:repeat(2,1fr);"><label><input type="checkbox" id="printInitial" checked> 検索タグ</label><label><input type="checkbox" id="printName" checked> ホテル名</label><label><input type="checkbox" id="printAddress" checked> 住所</label><label><input type="checkbox" id="printNote" checked> 備考</label><label><input type="checkbox" id="printNews" checked> 新着情報</label><label><input type="checkbox" id="printPageNumbers" checked> ページ番号</label></div></div>
           <div class="setting-group">
             <h4>📐 ページ分割（行数固定方式）</h4>
             <div class="setting-row">
@@ -395,7 +395,7 @@ async function loadCSV() {
     const r = await fetch(CSV_PATH + '?t=' + Date.now(), { cache: 'no-store' }); 
     const txt = await r.text(); 
     const lines = txt.trim().split(/\r?\n/).filter(Boolean); 
-    let start = (lines[0] || '').includes('頭文字') ? 1 : 0; 
+    let start = (lines[0] || '').includes('検索タグ') ? 1 : 0; 
     DATA_ALL = lines.slice(start).map(l => { 
       let p = l.split(','); 
       let name = p[1] || '';
@@ -710,7 +710,7 @@ async function generateOptimizedPages() {
   function buildTableHTML(rows, isFirstPage) {
     let html = `<table class="print-table">`;
     html += `<thead><tr>`;
-    html += `<th>No.</th><th>頭文字</th><th>ホテル名</th><th>住所</th><th>備考</th>`;
+    html += `<th>No.</th><th>検索タグ</th><th>ホテル名</th><th>住所</th><th>備考</th>`;
     html += `</tr></thead><tbody>`;
     rows.forEach((row, i) => {
       html += `<tr>`;
