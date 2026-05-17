@@ -194,27 +194,77 @@ a[href^="mailto"] {
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
-  <div class="panel no-print">
-    <h2 class="section-title">新着情報</h2>
-    <!-- 【1】新着情報パネル最上部へ GitHubトークン入力欄を追加 -->
-    <div style="margin-bottom:10px;">
-      <input
-        type="password"
-        id="githubToken"
-        placeholder="GitHubトークン"
-        style="padding:8px; border-radius:6px; border:1px solid #bbb; width:100%; box-sizing:border-box;"
-      >
-    </div>
-    <div class="row"><label>1</label><input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）"></div>
-    <div class="row"><label>2</label><input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）"></div>
-    <div class="row"><label>3</label><input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）"></div>
-    <div class="right">
-      <button class="btn" onclick="previewWithNews()">🔍 プレビュー（URL生成）</button>
-      <button class="btn btn-primary" onclick="saveNewsToJSON()" style="margin-left:8px;">💾 新着情報を保存</button>
-    </div>
-    <div class="hint">※ 「プレビュー」でトップページを確認、「保存」で新着情報をGitHubに保存します。</div>
+
+  <!-- GitHub接続 -->
+  <div class="panel no-print" style="
+    background:linear-gradient(145deg,#ffeef2,#ffdfe8);
+    border:2px solid #d9a5b3;
+  ">
+
+    <h2 class="section-title">
+      🔐 GitHub接続
+    </h2>
+
+    <input
+      type="password"
+      id="githubToken"
+      placeholder="GitHubトークン"
+      style="
+        padding:10px;
+        border-radius:8px;
+        border:1px solid #c88;
+        width:100%;
+        box-sizing:border-box;
+        background:#fff8fa;
+        font-size:16px;
+      "
+    >
+
   </div>
 
+  <!-- 新着情報 -->
+  <div class="panel no-print" style="
+  background:#e0f0e8;
+  border:2px solid #8ab3a0;
+">
+
+  <h2 class="section-title">
+    新着情報
+    </h2>
+
+<div class="row">
+  <label>1</label>
+  <input id="n1" type="text" placeholder="例：🆕 グランドオープン（中央区○○）">
+</div>
+
+<div class="row">
+  <label>2</label>
+  <input id="n2" type="text" placeholder="例：📌 リニューアル（駅前通り北側）">
+</div>
+
+<div class="row">
+  <label>3</label>
+  <input id="n3" type="text" placeholder="例：🛈 臨時休業（〜10/31）">
+</div>
+
+<div class="right">
+  <button class="btn" onclick="previewWithNews()">
+    🔍 プレビュー（URL生成）
+  </button>
+
+  <button
+    class="btn btn-primary"
+    onclick="saveNewsToJSON()"
+    style="margin-left:8px;"
+  >
+    💾 新着情報を保存
+  </button>
+</div>
+
+<div class="hint">
+  ※ 「プレビュー」でトップページを確認、「保存」で新着情報をGitHubに保存します。
+</div>
+</div>
   <div class="panel no-print">
     <h2 class="section-title">ホテル編集（既存データ）</h2>
     <div class="grid-kana">
