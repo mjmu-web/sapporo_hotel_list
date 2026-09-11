@@ -1311,39 +1311,67 @@ document.getElementById('speedBtn').addEventListener('click', () => {
   }, () => alert('位置情報を許可してください'), { enableHighAccuracy: true });
 });
 
-const RSS_URL = "https://www.nhk.or.jp/rss/news/cat0.xml";
+// ==================== NHKニュースRSS ====================
+const RSS_URL = "https://www3.nhk.or.jp/rss/news/cat0.xml";
+
 async function fetchRSS() {
   const newsDiv = document.getElementById("newsContent");
-  const proxies = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?', 'https://cors-anywhere.herokuapp.com/'];
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent(RSS_URL), { timeout: 5000 });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text || text.length < 100) continue;
-      const xml = new DOMParser().parseFromString(text, "text/xml");
-      if (xml.querySelector('parsererror')) continue;
-      const items = xml.querySelectorAll("item");
-      if (!items.length) continue;
-      const news = Array.from(items).slice(0,5).map(item => ({ title: item.querySelector("title")?.textContent || "タイトルなし", link: item.querySelector("link")?.textContent || "#" }));
-      newsDiv.innerHTML = '';
-      news.forEach((n, i) => {
-        const prefix = i === 0 ? '🚨' : '📻';
-        const span = document.createElement("span");
-        span.innerHTML = `${prefix} <a href="${n.link}" target="_blank" style="color:#ffa500;text-decoration:none;border-bottom:1px dotted #ffa500;">${n.title}</a>`;
-        newsDiv.appendChild(span);
-        if (i < news.length - 1) {
-          const sep = document.createElement("span");
-          sep.textContent = " ● ";
-          sep.style.color = "#ff4444";
-          newsDiv.appendChild(sep);
-        }
-      });
-      document.getElementById("updateTime").textContent = `更新: ${new Date().toLocaleTimeString()}`;
-      return;
-    } catch(e) {}
+
+  try {
+    const api =
+      "https://api.rss2json.com/v1/api.json?rss_url=" +
+      encodeURIComponent(RSS_URL);
+
+    const res = await fetch(api);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (data.status !== "ok" || !data.items || !data.items.length) {
+      throw new Error("RSSデータが取得できませんでした");
+    }
+
+    const news = data.items.slice(0, 5);
+
+    newsDiv.innerHTML = "";
+
+    news.forEach((n, i) => {
+      const prefix = i === 0 ? "🚨" : "📻";
+
+      const span = document.createElement("span");
+
+      const a = document.createElement("a");
+      a.href = n.link || "#";
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.color = "#ffa500";
+      a.style.textDecoration = "none";
+      a.style.borderBottom = "1px dotted #ffa500";
+      a.textContent = n.title || "タイトルなし";
+
+      span.append(prefix + " ", a);
+      newsDiv.appendChild(span);
+
+      if (i < news.length - 1) {
+        const sep = document.createElement("span");
+        sep.textContent = " ● ";
+        sep.style.color = "#ff4444";
+        newsDiv.appendChild(sep);
+      }
+    });
+
+    document.getElementById("updateTime").textContent =
+      `更新: ${new Date().toLocaleTimeString()}`;
+
+  } catch (e) {
+    console.error("NHK RSS取得失敗:", e);
+
+    newsDiv.innerHTML =
+      '<span class="news-error">📻 ニュース取得に失敗しました</span>';
   }
-  newsDiv.innerHTML = '<span class="news-error">📻 ニュース取得に失敗しました</span>';
 }
 
 let installPromptEvent = null;
