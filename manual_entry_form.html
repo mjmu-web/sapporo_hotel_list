@@ -275,15 +275,10 @@ a[href^="mailto"] {
       <button class="btn-k" data-g="ら">ら</button><button class="btn-k" data-g="わ">わ</button>
     </div>
     <div class="grid-alpha">
-      <button class="btn-a" data-g="ABCDE">ABCDE</button>
-      <button class="btn-a" data-g="FGHIJ">FGHIJ</button>
-      <button class="btn-a" data-g="KLMNO">KLMNO</button>
-      <button class="btn-a" data-g="PQRST">PQRST</button>
-      <button class="btn-a" data-g="UVWX">UVWX</button>
-      <button class="btn-a" data-g="YZ">YZ</button>
+      <button class="btn-a" data-g="ALPHABET">英数字</button>
     </div>
     <div id="card" class="card">
-      <div class="row"><label>検索タグ</label><input id="fInitial" type="text" placeholder="あ | A"><label>ホテル名</label><input id="fName" type="text" placeholder="ホテル◯◯"></div>
+      <div class="row"><label>検索タグ</label><input id="fInitial" type="text" placeholder="あ | A | 123"><label>ホテル名</label><input id="fName" type="text" placeholder="ホテル◯◯"></div>
       <div class="row"><label>住所</label><input id="fAddress" type="text" placeholder="札幌市◯◯区…"></div>
       <div class="row"><label>備考</label><textarea id="fNote" rows="3" placeholder="例：南2条通北側、駅近、旧名称あり など"></textarea></div>
       <div class="separator"></div>
@@ -296,17 +291,17 @@ a[href^="mailto"] {
         <button class="btn mini btn-primary" id="btnSave">💾 保存</button>
         <button class="btn mini btn-danger" id="btnDelete">🗑 削除</button>
       </div>
-      <div class="hint">※ 五十音／英字ボタンでグループを絞れます。編集後は「保存」ボタンで更新。</div>
+      <div class="hint">※ 五十音／英数字ボタンでグループを絞れます。編集後は「保存」ボタンで更新。</div>
     </div>
   </div>
 
   <div class="panel no-print new-hotel-panel">
     <h2 class="section-title">📝 新規ホテル登録（名前順に自動挿入）</h2>
-    <div class="row"><label>検索タグ</label><input id="newInitial" type="text" placeholder="あ | A"><label>ホテル名</label><input id="newName" type="text" placeholder="ホテル名（必須）"></div>
+    <div class="row"><label>検索タグ</label><input id="newInitial" type="text" placeholder="あ | A | 123"><label>ホテル名</label><input id="newName" type="text" placeholder="ホテル名（必須）"></div>
     <div class="row"><label>住所</label><input id="newAddress" type="text" placeholder="札幌市…"></div>
     <div class="row"><label>備考</label><textarea id="newNote" rows="2" placeholder="備考"></textarea></div>
     <div class="controls"><button class="btn btn-success" id="btnNewAdd">✨ 新規追加（自動整列）</button></div>
-    <div class="hint">入力後「新規追加」で、ホテル名の五十音順に自動的に挿入されます。</div>
+    <div class="hint">入力後「新規追加」で、検索タグを基準に自動整列されます。</div>
   </div>
 
   <div class="panel no-print">
@@ -363,8 +358,15 @@ let VIEW = [];
 let viewIndex = 0;
 let currentGroup = null;
 
-const KANA_RANGES = { 'あ': /[あいうえおぁぃぅぇぉアァイィウゥエェオォヴ]/, 'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/, 'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/, 'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/, 'な': /[なにぬねのナニヌネノ]/, 'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/, 'ま': /[まみむめもマミムメモ]/, 'や': /[やゆよゃゅょヤユヨ]/, 'ら': /[らりるれろラリルレロ]/, 'わ': /[わをんワヲン]/ };
-const ALPHA_GROUPS = { 'ABCDE':'ABCDE','FGHIJ':'FGHIJ','KLMNO':'KLMNO','PQRST':'PQRST','UVWX':'UVWX','YZ':'YZ' };
+const KANA_RANGES = { 'あ': /[あいうえおぁぃぅぇぉアイウエオァィゥェォヴ]/, 'か': /[かきくけこがぎぐげごカキクケコガギグゲゴ]/, 'さ': /[さしすせそざじずぜぞサシスセソザジズゼゾ]/, 'た': /[たちつてとだぢづでどタチツテトダヂヅデド]/, 'な': /[なにぬねのナニヌネノ]/, 'は': /[はひふへほばびぶべぼぱぴぷぺぽハヒフヘホバビブベボパピプペポ]/, 'ま': /[まみむめもマミムメモ]/, 'や': /[やゆよゃゅょヤユヨ]/, 'ら': /[らりるれろラリルレロ]/, 'わ': /[わをんワヲン]/ };
+const ALPHABET_GROUP = 'ALPHABET';
+
+function getInitialKeys(hotel) {
+  return (hotel.initial || '')
+    .split('|')
+    .map(v => v.trim())
+    .filter(v => v);
+}
 
 // --- データ正規化ロジック ---
 function normalizeName(name) {
@@ -521,28 +523,22 @@ function applyGroup(g) {
   currentGroup = g;
 
   if(KANA_RANGES[g]) {
+    VIEW = DATA_ALL.filter(h => {
+      const keys = getInitialKeys(h);
+      return keys.some(key => {
+        if (key.length === 0) return false;
+        return KANA_RANGES[g].test(key.charAt(0));
+      });
+    });
 
-    VIEW = DATA_ALL.filter(h =>
-
-      KANA_RANGES[g].test(
-        (h.name || '').charAt(0)
-      )
-
-    );
+  } else if(g === ALPHABET_GROUP) {
+    VIEW = DATA_ALL.filter(h => {
+      const keys = getInitialKeys(h);
+      return keys.some(key => /^[A-Za-z0-9]/.test(key));
+    });
 
   } else {
-
-    let set = ALPHA_GROUPS[g] || '';
-
-    VIEW = DATA_ALL.filter(h =>
-
-      set.includes(
-        ((h.name || '').charAt(0) || '')
-          .toUpperCase()
-      )
-
-    );
-
+    VIEW = DATA_ALL.slice();
   }
 
   VIEW.sort((a,b) => {

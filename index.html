@@ -650,7 +650,7 @@ height: clamp(48px, 14vw, 60px);
 </div>
 <!-- 新A-Zボタン（大型円形） -->
 <div class="alpha">
-  <button class="metal-alpha" data-g="ALPHABET">AtoZ</button>
+  <button class="metal-alpha" data-g="ALPHABET">英数字</button>
 </div>
 
 <div class="hotel-grid">
@@ -1025,7 +1025,7 @@ function showInitials(group) {
   } else if (group === 'ALPHABET') {
     filtered = DATA_ALL.filter(h => {
       const keys = getInitialKeys(h);
-      return keys.some(key => /^[A-Za-z]/.test(key));
+      return keys.some(key => /^[A-Za-z0-9]/.test(key));
     });
   } else {
     return;
@@ -1045,7 +1045,7 @@ function showInitials(group) {
     keys.forEach(displayPrefix => {
       let ok = false;
       if (group === 'ALPHABET') {
-        ok = /^[A-Za-z]/.test(displayPrefix);
+        ok = /^[A-Za-z0-9]/.test(displayPrefix);
       } else {
         ok = isCharInRow(displayPrefix.charAt(0), group);
       }
@@ -1055,7 +1055,7 @@ function showInitials(group) {
     });
   });
   const sortedPrefixes = Array.from(prefixMap.keys()).sort((a,b) => a.localeCompare(b, 'ja'));
-  let overlayHtml = `<h3>「${group === 'ALPHABET' ? 'A-Z' : group}」の絞り込み</h3>`;
+  let overlayHtml = `<h3>「${group === 'ALPHABET' ? '英数字' : group}」の絞り込み</h3>`;
   sortedPrefixes.forEach(prefix => {
     const count = prefixMap.get(prefix).length;
     const safePrefix = prefix.replace(/'/g, "\\'");
@@ -1093,7 +1093,7 @@ function selectPrefix(prefix, group) {
   } else if (group === 'ALPHABET') {
     filtered = DATA_ALL.filter(h => {
       const keys = getInitialKeys(h);
-      return keys.some(key => /^[A-Za-z]/.test(key) && key === prefix);
+      return keys.some(key => /^[A-Za-z0-9]/.test(key) && key === prefix);
     });
   }
   if (filtered.length === 0) {
