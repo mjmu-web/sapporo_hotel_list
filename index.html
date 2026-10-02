@@ -650,7 +650,7 @@ height: clamp(48px, 14vw, 60px);
 </div>
 <!-- 新A-Zボタン（大型円形） -->
 <div class="alpha">
-  <button class="metal-alpha" data-g="ALPHABET">英数字</button>
+  <button class="metal-alpha" data-g="ALPHABET">ABC/123</button>
 </div>
 
 <div class="hotel-grid">
@@ -1055,7 +1055,7 @@ function showInitials(group) {
     });
   });
   const sortedPrefixes = Array.from(prefixMap.keys()).sort((a,b) => a.localeCompare(b, 'ja'));
-  let overlayHtml = `<h3>「${group === 'ALPHABET' ? '英数字' : group}」の絞り込み</h3>`;
+  let overlayHtml = `<h3>「${group === 'ALPHABET' ? 'ABC/123' : group}」の絞り込み</h3>`;
   sortedPrefixes.forEach(prefix => {
     const count = prefixMap.get(prefix).length;
     const safePrefix = prefix.replace(/'/g, "\\'");
