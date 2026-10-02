@@ -267,6 +267,15 @@ height: clamp(48px, 14vw, 60px);
   font-style: italic;
 }
 
+/* データ更新情報 */
+#listInfo {
+  text-align: center;
+  color: #333;
+  font-size: 0.9em;
+  font-weight: bold;
+  margin: 8px auto 12px;
+}
+
 /* ホテル一覧カード */
 #results {
   max-width: 1000px;
@@ -709,6 +718,7 @@ height: clamp(48px, 14vw, 60px);
   </button>
 
 </div>
+<div id="listInfo">更新：取得中　｜　収録：--件</div>
 <div id="results"></div>
 
 <!-- 修正②: bottomBtns から topBtn を削除し、外に移動 -->
@@ -934,6 +944,44 @@ async function loadCSV() {
   });
   DATA = DATA_ALL.slice();
   render(DATA_ALL);
+  updateListInfo();
+}
+
+// ==================== ホテルリスト更新情報 ====================
+async function updateListInfo() {
+  const info = document.getElementById('listInfo');
+
+  // 収録件数は常に全レコード数
+  const count = DATA_ALL.length;
+
+  try {
+    const res = await fetch(
+      'https://api.github.com/repos/mjmu-web/sapporo_hotel_list/commits?path=data/hotels.csv&per_page=1'
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const commits = await res.json();
+
+    if (!commits.length) throw new Error('コミット情報なし');
+
+    const date = new Date(commits[0].commit.committer.date);
+
+    const updated = date.toLocaleString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    info.textContent = `更新：${updated}　｜　収録：${count}件`;
+
+  } catch (e) {
+    console.error('更新日時取得失敗:', e);
+    info.textContent = `更新：取得失敗　｜　収録：${count}件`;
+  }
 }
 
 function mapLink(name, address) {
