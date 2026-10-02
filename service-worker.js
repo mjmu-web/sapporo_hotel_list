@@ -1,4 +1,5 @@
-const CACHE_NAME = 'hotel-list-cache-v1';
+const CACHE_NAME = 'hotel-list-cache-v2';
+
 const urlsToCache = [
   '/',
   '/index.html',
@@ -13,35 +14,53 @@ const urlsToCache = [
   '/data/bbs.json'
 ];
 
-// ===== インストール時にキャッシュ =====
+// インストール
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
-  console.log('[ServiceWorker] Installed & cached');
+  self.skipWaiting();
 });
 
-// ===== フェッチ時にキャッシュ利用 =====
+// HTMLはネット優先、それ以外はキャッシュ優先
 self.addEventListener('fetch', event => {
+  if (
+    event.request.mode === 'navigate' ||
+    event.request.destination === 'document'
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, clone);
+          });
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then(response => {
-      // キャッシュがあればそれを返し、なければネットから取得
       return response || fetch(event.request);
     })
   );
 });
 
-// ===== 新バージョンがあれば古いキャッシュ削除 =====
+// 古いキャッシュを削除
 self.addEventListener('activate', event => {
-  const whitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(key => {
-        if (!whitelist.includes(key)) {
-          console.log('[ServiceWorker] Deleting old cache:', key);
-          return caches.delete(key);
-        }
-      }))
+      Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      )
     )
   );
+  self.clients.claim();
 });
