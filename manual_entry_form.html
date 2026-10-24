@@ -377,6 +377,22 @@ function normalizeName(name) {
     .trim();
 }
 
+// --- ホテル名の重複チェック ---
+function normalizeHotelName(name) {
+  return (name || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\s・･\-‐-‒–—―]/g, '');
+}
+
+function findDuplicateHotel(name, excludeHotel = null) {
+  const normalized = normalizeHotelName(name);
+  if (!normalized) return null;
+  return DATA_ALL.find(h =>
+    h !== excludeHotel && normalizeHotelName(h.name) === normalized
+  ) || null;
+}
+
 init();
 async function init() {
 
@@ -598,70 +614,165 @@ function searchByName() {
   }
 
 }
-// 【6】saveCurrentEdit を async function に変更し、即GitHub保存化
-async function saveCurrentEdit() { 
-  if(VIEW.length === 0) return; 
-  let h = VIEW[viewIndex]; 
-  let initial = document.getElementById('fInitial').value.trim();
-  let name = document.getElementById('fName').value.trim();
-  
-  if(!name) { alert('ホテル名必須'); return; }
-  
-  if (!initial || initial === '') {
-    initial = normalizeName(name).charAt(0);
+// ホテル情報の編集・追加・削除は、確認後に反映し、GitHub保存失敗時は元に戻す
+async function saveCurrentEdit() {
+  if (VIEW.length === 0) return;
+
+  const h = VIEW[viewIndex];
+  if (!h) return;
+
+  const initialInput = document.getElementById('fInitial').value.trim();
+  const name = document.getElementById('fName').value.trim();
+  const address = document.getElementById('fAddress').value.trim();
+  const note = document.getElementById('fNote').value.trim();
+
+  if (!name) {
+    alert('ホテル名必須');
+    return;
   }
-  
+
+  const duplicate = findDuplicateHotel(name, h);
+  if (duplicate) {
+    alert(
+      '重複の可能性があります。\n\n' +
+      '既存ホテル：' + duplicate.name +
+      '\n入力したホテル：' + name +
+      '\n\n確認してください。保存は続行します。'
+    );
+  }
+
+  const initial = initialInput || normalizeName(name).charAt(0);
+  if (!confirm('この内容でGitHubへ保存しますか？')) {
+    // キャンセル時はデータを変更せず、入力欄も元の状態に戻す
+    updateForm();
+    return;
+  }
+
+  const oldValues = {
+    initial: h.initial,
+    name: h.name,
+    address: h.address,
+    note: h.note,
+    keywords: h.keywords
+  };
+
   h.initial = initial;
   h.name = name;
-  h.address = document.getElementById('fAddress').value.trim();
-  h.note = document.getElementById('fNote').value.trim();
-  h.keywords = ''; // 廃止
+  h.address = address;
+  h.note = note;
+  h.keywords = '';
+  refreshAfterDataChange();
+  const newIdx = VIEW.findIndex(item => item === h);
+  viewIndex = newIdx >= 0 ? newIdx : 0;
+  updateForm();
 
-  refreshAfterDataChange(); 
-  let newIdx = VIEW.findIndex(hh => hh === h); 
-  viewIndex = newIdx >= 0 ? newIdx : 0; 
-  updateForm(); 
-  
-  // 確認とGitHub保存
-  if(!confirm('この内容でGitHubへ保存しますか？')) return;
-  await saveAllToGitHub();
-  alert('✅ GitHubへ保存しました');
-}
-// 【7】addNewHotel を async function に変更し、即GitHub保存化
-async function addNewHotel() { 
-  let initial = document.getElementById('newInitial').value.trim();
-  let name = document.getElementById('newName').value.trim();
-  
-  if(!name) { alert('ホテル名必須'); return; }
-  
-  if (!initial || initial === '') {
-    initial = normalizeName(name).charAt(0);
+  try {
+    const token = document.getElementById('githubToken').value.trim();
+    if (!token) throw new Error('GitHubトークンを入力してください');
+    localStorage.setItem('githubToken', token);
+    await saveHotelsToGitHub(token, 'Update hotel from admin panel');
+    alert('✅ GitHubへ保存しました');
+  } catch (e) {
+    Object.assign(h, oldValues);
+    refreshAfterDataChange();
+    const restoredIdx = VIEW.findIndex(item => item === h);
+    viewIndex = restoredIdx >= 0 ? restoredIdx : 0;
+    updateForm();
+    alert('GitHubへの保存に失敗しました。変更を取り消しました。\n' + e.message);
   }
-  
-  let nh = { 
-    initial: initial, 
-    name: name, 
-    address: document.getElementById('newAddress').value.trim(), 
-    note: document.getElementById('newNote').value.trim(),
-    keywords: '' // 廃止
-  }; 
-  
-  DATA_ALL.push(nh); 
-  refreshAfterDataChange(); 
-  document.getElementById('newInitial').value = ''; 
-  document.getElementById('newName').value = ''; 
-  document.getElementById('newAddress').value = ''; 
-  document.getElementById('newNote').value = ''; 
-  viewIndex = VIEW.findIndex(h => h.name === nh.name && h.address === nh.address); 
-  if(viewIndex === -1) viewIndex = 0; 
-  updateForm(); 
-  
-  // 確認とGitHub保存
-  if(!confirm('この内容で新規追加してGitHubへ保存しますか？')) return;
-  await saveAllToGitHub();
-  alert('✅ GitHubへ保存しました');
 }
-function delCurrent() { if(!confirm('削除しますか？')) return; let target = VIEW[viewIndex]; DATA_ALL = DATA_ALL.filter(h => h !== target); refreshAfterDataChange(); alert('削除しました'); }
+
+async function addNewHotel() {
+  let initial = document.getElementById('newInitial').value.trim();
+  const name = document.getElementById('newName').value.trim();
+  const address = document.getElementById('newAddress').value.trim();
+  const note = document.getElementById('newNote').value.trim();
+
+  if (!name) {
+    alert('ホテル名必須');
+    return;
+  }
+
+  const duplicate = findDuplicateHotel(name);
+  if (duplicate) {
+    alert(
+      '重複の可能性があります。\n\n' +
+      '既存ホテル：' + duplicate.name +
+      '\n入力したホテル：' + name +
+      '\n\n確認してください。登録は続行します。'
+    );
+  }
+
+  if (!initial) initial = normalizeName(name).charAt(0);
+
+  const nh = {
+    initial,
+    name,
+    address,
+    note,
+    keywords: ''
+  };
+
+  // 確認前にはデータや入力欄を変更しない
+  if (!confirm('この内容で新規追加してGitHubへ保存しますか？')) return;
+
+  DATA_ALL.push(nh);
+  refreshAfterDataChange();
+  viewIndex = VIEW.findIndex(h => h === nh);
+  if (viewIndex === -1) viewIndex = 0;
+  updateForm();
+
+  try {
+    const token = document.getElementById('githubToken').value.trim();
+    if (!token) throw new Error('GitHubトークンを入力してください');
+    localStorage.setItem('githubToken', token);
+    await saveHotelsToGitHub(token, 'Add hotel from admin panel');
+    document.getElementById('newInitial').value = '';
+    document.getElementById('newName').value = '';
+    document.getElementById('newAddress').value = '';
+    document.getElementById('newNote').value = '';
+    alert('✅ GitHubへ保存しました');
+  } catch (e) {
+    DATA_ALL = DATA_ALL.filter(h => h !== nh);
+    refreshAfterDataChange();
+    viewIndex = Math.max(0, VIEW.findIndex(h => h.name === name && h.address === address));
+    updateForm();
+    alert('GitHubへの保存に失敗しました。追加を取り消しました。\n' + e.message);
+  }
+}
+
+async function delCurrent() {
+  if (VIEW.length === 0) return;
+  const target = VIEW[viewIndex];
+  if (!target) return;
+
+  const token = document.getElementById('githubToken').value.trim();
+  if (!token) {
+    alert('GitHubトークンを入力してください');
+    return;
+  }
+
+  if (!confirm('「' + target.name + '」を削除してGitHubへ保存しますか？')) return;
+
+  const originalData = DATA_ALL.slice();
+  DATA_ALL = DATA_ALL.filter(h => h !== target);
+  refreshAfterDataChange();
+  viewIndex = Math.min(viewIndex, Math.max(0, VIEW.length - 1));
+  updateForm();
+
+  try {
+    localStorage.setItem('githubToken', token);
+    await saveHotelsToGitHub(token, 'Delete hotel from admin panel');
+    alert('削除してGitHubへ保存しました');
+  } catch (e) {
+    DATA_ALL = originalData;
+    refreshAfterDataChange();
+    const restoredIdx = VIEW.findIndex(h => h === target);
+    viewIndex = restoredIdx >= 0 ? restoredIdx : 0;
+    updateForm();
+    alert('GitHubへの保存に失敗しました。削除を取り消しました。\n' + e.message);
+  }
+}
 function downloadExcel() { sortDataAll(); let csv = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); downloadCSV(csv, 'hotels_export.csv'); }
 function downloadCSV(content, fn) { let blob = new Blob([content], { type: 'text/csv;charset=utf-8' }); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fn; a.click(); URL.revokeObjectURL(a.href); }
 // CSVインポート関数削除
@@ -877,11 +988,28 @@ async function executePrint() {
 }
 async function executePrintFromModal() { await executePrint(); closePrintModal(); }
 
-// 【8】saveAllToGitHub から confirm を削除
-async function saveAllToGitHub() { let token = document.getElementById('githubToken').value; if(!token) { alert('GitHubトークンを入力してください'); return; } 
-  // 【3】トークン自動保存
+// GitHub保存
+async function saveHotelsToGitHub(token, message = 'Update hotels.csv from admin panel') {
+  if (!token) throw new Error('GitHubトークンを入力してください');
+  sortDataAll();
+  const csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n');
+  await saveFileToGitHub(token, CSV_PATH, csvContent, message);
+}
+
+async function saveAllToGitHub() {
+  const token = document.getElementById('githubToken').value.trim();
+  if (!token) throw new Error('GitHubトークンを入力してください');
   localStorage.setItem('githubToken', token);
-  sortDataAll(); let csvContent = DATA_ALL.map(h => [h.initial, h.name, h.address, h.note].join(',')).join('\n'); await saveFileToGitHub(token, CSV_PATH, csvContent, 'Update hotels.csv from admin panel'); let newsData = { news1: document.getElementById('n1').value, news2: document.getElementById('n2').value, news3: document.getElementById('n3').value, updated: new Date().toISOString() }; await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel'); }
+  await saveHotelsToGitHub(token, 'Update hotels.csv from admin panel');
+  const newsData = {
+    news1: document.getElementById('n1').value,
+    news2: document.getElementById('n2').value,
+    news3: document.getElementById('n3').value,
+    updated: new Date().toISOString()
+  };
+  await saveFileToGitHub(token, NEWS_PATH, JSON.stringify(newsData, null, 2), 'Update news.json from admin panel');
+}
+
 async function saveFileToGitHub(token, path, content, message) { let api = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + path; let sha = null; try { let get = await fetch(api, { headers: { 'Authorization': 'token ' + token } }); if(get.ok) { let cur = await get.json(); sha = cur.sha; } } catch(e) {} let put = await fetch(api, { method: 'PUT', headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, content: btoa(unescape(encodeURIComponent(content))), sha: sha }) }); if(!put.ok) throw new Error((await put.json()).message); return put.json(); }
 </script>
 </body>
