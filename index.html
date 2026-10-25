@@ -874,6 +874,8 @@ async function toggleWakeLock() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  fetchRSS();
+  setInterval(fetchRSS, 1800000);
   requestWakeLock();
 });
 document.addEventListener('visibilitychange', async () => {
@@ -1359,66 +1361,98 @@ document.getElementById('speedBtn').addEventListener('click', () => {
   }, () => alert('位置情報を許可してください'), { enableHighAccuracy: true });
 });
 
-// ==================== NHKニュースRSS ====================
+// RSS (NHK ONE) - 上部横断幕用
+// 以前の方式に戻す：RSS XMLをCORSプロキシ経由で取得し、DOMParserで解析する。
+// JSON / JSONP変換サービスは使用しない。
 const RSS_URL = "https://news.web.nhk/n-data/conf/na/rss/cat0.xml";
+const RSS_PROXIES = [
+  // 1. cors.dev：URLをそのまま後ろに連結する方式
+  {
+    name: "cors.dev",
+    url: target => "https://proxy.cors.dev/" + target
+  },
+  // 2. AllOrigins：URLをエンコードして raw?url= に渡す方式
+  {
+    name: "AllOrigins",
+    url: target => "https://api.allorigins.win/raw?url=" + encodeURIComponent(target)
+  }
+];
+let nhkRssLoading = false;
 
 async function fetchRSS() {
   const newsDiv = document.getElementById("newsContent");
+  const statusDiv = document.getElementById("updateTime");
+  if (!newsDiv || nhkRssLoading) return;
+  nhkRssLoading = true;
 
   try {
-    const api =
-      "https://api.rss2json.com/v1/api.json?rss_url=" +
-      encodeURIComponent(RSS_URL);
+    for (const proxy of RSS_PROXIES) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        let response;
+        try {
+          response = await fetch(proxy.url(RSS_URL), {
+            signal: controller.signal,
+            cache: "no-store"
+          });
+        } finally {
+          clearTimeout(timeoutId);
+        }
+        if (!response.ok) continue;
 
-    const res = await fetch(api);
+        const xmlText = await response.text();
+        if (!xmlText || xmlText.length < 100) continue;
+        const xml = new DOMParser().parseFromString(xmlText, "application/xml");
+        if (xml.querySelector("parsererror")) continue;
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+        const items = Array.from(xml.querySelectorAll("item")).slice(0, 5);
+        if (!items.length) continue;
 
-    const data = await res.json();
+        const news = items.map(item => ({
+          title: item.querySelector("title")?.textContent?.trim() || "タイトルなし",
+          link: item.querySelector("link")?.textContent?.trim() || "https://news.web.nhk/newsweb/"
+        }));
 
-    if (data.status !== "ok" || !data.items || !data.items.length) {
-      throw new Error("RSSデータが取得できませんでした");
-    }
+        newsDiv.replaceChildren();
+        news.forEach((item, index) => {
+          if (index > 0) {
+            const separator = document.createElement("span");
+            separator.textContent = " ● ";
+            separator.style.color = "#ff4444";
+            newsDiv.appendChild(separator);
+          }
+          const prefix = document.createElement("span");
+          prefix.textContent = index === 0 ? "🚨 " : "📻 ";
+          newsDiv.appendChild(prefix);
 
-    const news = data.items.slice(0, 5);
-
-    newsDiv.innerHTML = "";
-
-    news.forEach((n, i) => {
-      const prefix = i === 0 ? "🚨" : "📻";
-
-      const span = document.createElement("span");
-
-      const a = document.createElement("a");
-      a.href = n.link || "#";
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.style.color = "#ffa500";
-      a.style.textDecoration = "none";
-      a.style.borderBottom = "1px dotted #ffa500";
-      a.textContent = n.title || "タイトルなし";
-
-      span.append(prefix + " ", a);
-      newsDiv.appendChild(span);
-
-      if (i < news.length - 1) {
-        const sep = document.createElement("span");
-        sep.textContent = " ● ";
-        sep.style.color = "#ff4444";
-        newsDiv.appendChild(sep);
+          const link = document.createElement("a");
+          link.href = item.link;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = item.title;
+          link.style.color = "#ffa500";
+          link.style.textDecoration = "none";
+          link.style.borderBottom = "1px dotted #ffa500";
+          newsDiv.appendChild(link);
+        });
+        if (statusDiv) statusDiv.textContent = `NHK ONE更新: ${new Date().toLocaleTimeString()}`;
+        return;
+      } catch (proxyError) {
+        // このプロキシで失敗したら、従来どおり次のプロキシを試す。
       }
-    });
+    }
 
-    document.getElementById("updateTime").textContent =
-      `更新: ${new Date().toLocaleTimeString()}`;
-
-  } catch (e) {
-    console.error("NHK RSS取得失敗:", e);
-
-    newsDiv.innerHTML =
-      '<span class="news-error">📻 ニュース取得に失敗しました</span>';
+    newsDiv.replaceChildren();
+    const fallback = document.createElement("a");
+    fallback.href = "https://news.web.nhk/newsweb/";
+    fallback.target = "_blank";
+    fallback.rel = "noopener noreferrer";
+    fallback.textContent = "📻 NHK ONEニュースを開く（見出し取得失敗）";
+    newsDiv.appendChild(fallback);
+    if (statusDiv) statusDiv.textContent = "NHK ONE RSS取得失敗（プロキシ経由）";
+  } finally {
+    nhkRssLoading = false;
   }
 }
 
@@ -1494,8 +1528,6 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     loadNewsFromJSON();
   }
-  fetchRSS();
-  setInterval(fetchRSS, 1800000);
   setTimeout(disableIOSDataDetectors, 100);
   initTerms();   // 利用規約の初期化
 });
